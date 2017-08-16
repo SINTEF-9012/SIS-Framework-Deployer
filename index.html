@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, shrink-to-fit=no, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>SISFramework - Deployer</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/jquery.qtip.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/simple-sidebar.css" rel="stylesheet">
+
+    <link href="css/style.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">
+                    <img alt="Brand" style="height: 60px; padding-bottom: 35px;" src="./img/Logo.png">
+                </a>
+            </div>
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">File<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" id="load" data-toggle="modal" data-target="#modalLoad">Load Deployment model</a></li>
+                            <li><a href="#" id="save">Store Deployment model</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Add Host<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" id="external">External</a></li>
+                            <li><a href="#" id="docker">Docker</a></li>
+                            <li><a href="#" id="vm">VM</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Add Component<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" id="external_comp">External</a></li>
+                            <li><a href="#" id="nr">Node-red</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Add Controler<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#">Controler</a></li>
+
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Add Link<span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" id="container" data-toggle="modal" data-target="#modalContainment">Contenance</a></li>
+                            <li><a href="#" id="communication" data-toggle="modal" data-target="#modalLink">Communication</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Deploy <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" data-toggle="modal" data-target="#modalConnect">Connect</a></li>
+                            <li><a href="#" id="deployAll">All</a></li>
+                            <li><a href="#">something else</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+    </nav>
+
+
+    <!-- Welcome Modal -->
+    <div class="modal fade" id="welcomeModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <div class="modal-body" id="ctx_modal_content">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-xs-4">
+                                <img src="./img/Logo.png" style="width: 100%">
+                            </div>
+                            <div class="col-xs-8">
+                                <h2>Welcome!</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- modal -->
+
+
+    <!-- Modal -->
+    <div class="modal left fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Edit</h4>
+                </div>
+
+                <div class="modal-body" id="ctx_modal_content">
+                    <div class="form-group" id="form_ctx_modal">
+
+                    </div>
+                    <div id="goto"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger pull-left" data-dismiss="modal" id="ctx_delete"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete</button>
+                    <button type="button" class="btn btn-primary pull-right" data-dismiss="modal" id="ctx_save"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Save</button>
+                    <button type="button" class="btn btn-info pull-right" data-dismiss="modal" id="ctx_goto"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Go to!</button>
+                </div>
+
+            </div>
+            <!-- modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- modal -->
+
+
+    <!-- Modal Docker Host -->
+    <div class="modal fade" tabindex="-1" id="modalDocker" role="dialog" aria-labelledby="modalDockerLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title" id="modalDockerLabel">Create</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group" id="create_form">
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-danger pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</button>
+                    <button id="addHost" type="button" class="btn btn-primary pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add</button>
+                </div>
+
+            </div>
+            <!-- modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- modal -->
+
+    <!-- Modal Link -->
+    <div class="modal fade" tabindex="-1" id="modalLink" role="dialog" aria-labelledby="modalLinkLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title" id="modalDockerLabel">Create Link</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="comp">Name:</label>
+                        <input type="text" id="linkName" class="form-control" placeholder="a name">
+                    </div>
+                    <div class="form-group">
+                        <label for="src">Source:</label>
+                        <select class="form-control" id="selSrc">
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tgt">Target:</label>
+                        <select class="form-control" id="selTarget">
+
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-danger pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</button>
+                    <button id="addLink" type="button" class="btn btn-primary pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add</button>
+                </div>
+
+            </div>
+            <!-- modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- modal -->
+
+    <!-- Modal Containment -->
+    <div class="modal fade" tabindex="-1" id="modalContainment" role="dialog" aria-labelledby="modalContainementLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title" id="modalDockerLabel">Host Component On</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="comp">Component:</label>
+                        <select class="form-control" id="selComp">
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="Host">Hosted on:</label>
+                        <select class="form-control" id="selHost">
+
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-danger pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</button>
+                    <button id="addContainment" type="button" class="btn btn-primary pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add</button>
+                </div>
+
+            </div>
+            <!-- modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- modal -->
+
+    <!-- Load modal -->
+    <div class="modal fade" tabindex="-1" id="modalLoad" role="dialog" aria-labelledby="modalContainementLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title" id="modalDockerLabel">Load model</h4>
+                </div>
+
+                <div class="modal-body">
+                    <input id="selectedFile" type="file" class="input-file">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-danger pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</button>
+                    <button id="loadFile" type="button" class="btn btn-primary pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Load</button>
+                </div>
+
+            </div>
+            <!-- modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- modal -->
+
+    <!-- Connect modal -->
+    <div class="modal fade" tabindex="-1" id="modalConnect" role="dialog" aria-labelledby="modalConnectLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title" id="modalConnectLabel">Connect to server</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="input-group">
+                        <input type="text" id="url" class="form-control" placeholder="URL">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" data-dismiss="modal" type="button" id='go'>Go!</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-danger pull-left" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Cancel</button>
+                    <button id="loadFile" type="button" class="btn btn-primary pull-right" data-dismiss="modal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Load</button>
+                </div>
+
+            </div>
+            <!-- modal-content -->
+        </div>
+        <!-- modal-dialog -->
+    </div>
+    <!-- modal -->
+
+    <div id="alert-div" style="position:fixed;width:500px;left: 50%;margin-left: -250px;z-index:100000"></div>
+
+    <div id="page-content-wrapper" class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="cy"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/jquery.js"></script>
+
+    <script src="js/bootstrap.min.js"></script>
+
+    <script src="js/jquery.qtip.min.js"></script>
+
+    <script src="js/cytoscape.min.js"></script>
+
+    <script src="js/cytoscape-qtip.js"></script>
+
+    <script src="js/toolkit.js"></script>
+
+    <script src="js/websocket.js"></script>
+
+    <script src="metamodel/allinone.js"></script>
+
+    <script src="editor/graph.js"></script>
+
+    <script src="editor/controller.js"></script>
+
+</body>
+
+</html>

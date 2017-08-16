@@ -1,0 +1,21 @@
+{
+    "name": "sis-framework-deployer",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "node ./app.js"
+    },
+    "dependencies": {
+        "body-parser": "~1.17.1",
+        "cookie-parser": "~1.4.3",
+        "debug": "~2.6.3",
+        "express": "~4.15.2",
+        "jade": "~1.11.0",
+        "morgan": "~1.8.1",
+        "serve-favicon": "~2.4.2",
+        "path": "~0.12.7",
+        "dockerode": "2.4.3",
+        "pkgcloud": "1.4.0",
+        "ws": "3.1.0"
+    }
+}
