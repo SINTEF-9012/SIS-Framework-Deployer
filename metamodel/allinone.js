@@ -76,6 +76,24 @@ var deployment_model = function (spec) {
         return tab;
     };
 
+    that.get_all_inputs_of_component = function (comp) {
+        var tab = that.links.filter(function (elem) {
+            if (elem.target === comp.name) {
+                return elem;
+            }
+        });
+        return tab;
+    };
+
+    that.get_all_outputs_of_component = function (comp) {
+        var tab = that.links.filter(function (elem) {
+            if (elem.src === comp.name) {
+                return elem;
+            }
+        });
+        return tab;
+    };
+
     return that;
 }
 
@@ -235,6 +253,11 @@ var docker_resource = function (spec) {
         "80": "80",
         "22": "22"
     };
+    that.devices = spec.devices || {
+        "PathOnHost": '',
+        "PathInContainer": '',
+        "CgroupPermissions": "rwm"
+    }
 
     return that;
 }
@@ -270,7 +293,7 @@ var node_factory = function () {
             component = external_node(spec);
         } else if (type === "node_red") {
             component = node_red(spec);
-        } else if (type === "controler") {
+        } else if (type === "controller") {
             component = controler(spec);
         }
 

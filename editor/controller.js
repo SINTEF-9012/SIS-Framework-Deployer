@@ -26,7 +26,6 @@ var context_menu = (function () {
         //It should laways be a name
         //First we update the display (in the graph and its style to update the label display)
         target_node.id($('#ctx_name').val());
-        console.log(">>>>>>>>" + target_node.id());
         cy.$('#' + target_node.id()).css({
             content: $('#ctx_name').val()
         });
@@ -83,6 +82,10 @@ var create_modal = (function () {
 
     $('#external_comp').on('click', function (e) {
         manage_modal("external_node");
+    });
+
+    $('#controller').on('click', function (e) {
+        manage_modal("controller");
     });
 
     $('#addHost').on('click', function (evt) {
@@ -168,7 +171,7 @@ $('#addLink').on('click', function (evt) {
     cy.add(edge);
 
     //add to model
-    var l = link();
+    var l = link({});
     l.name = name;
     l.src = selectedSrc;
     l.target = selectedTarget;

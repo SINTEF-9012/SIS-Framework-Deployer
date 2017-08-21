@@ -56,8 +56,8 @@ var cy = window.cy = cytoscape({
     }, {
             selector: 'node.questionable',
             css: {
-                'border-color': '#AAA',
-                'background-color': '#AAA',
+                'border-color': '#A33',
+                'background-color': '#B55',
                 'shape': 'roundrectangle'
             }
     }, {
@@ -105,7 +105,7 @@ var graph_factory = function () {
 
         } else if (type === "node_red") {
             node.classes = 'node_red';
-        } else if (type === "controler") {
+        } else if (type === "controller") {
             node.classes = 'questionable';
         }
         return node;
