@@ -5,7 +5,7 @@ var docker_connector = function () {
     var that = {};
     that.docker = {};
 
-    that.buildAndDeploy = function (endpoint, port, port_bindings, devices, command, image) {
+    that.buildAndDeploy = function (endpoint, port, port_bindings, devices, command, image, mounts) {
         that.docker = new Docker({
             host: endpoint,
             port: port
@@ -16,15 +16,15 @@ var docker_connector = function () {
                     end: true
                 });
                 stream.on('end', function () {
-                    that.createContainerAndStart(port_bindings, command, image, devices);
+                    that.createContainerAndStart(port_bindings, command, image, devices, mounts);
                 });
             } else {
-                that.createContainerAndStart(port_bindings, command, image, devices);
+                that.createContainerAndStart(port_bindings, command, image, devices, mounts);
             }
         });
     }
 
-    that.createContainerAndStart = function (port_bindings, command, image, devices) {
+    that.createContainerAndStart = function (port_bindings, command, image, devices, mounts) {
         //Create a container from an image
         //This is crappy code :)
         var port = '{';
@@ -66,6 +66,17 @@ var docker_connector = function () {
                     'CgroupPermissions': devices.CgroupPermissions
                 }];
             }
+        }
+
+        options.Mounts = [];
+        if (mounts !== undefined) {
+            options.Mounts.push({
+                "Name": "",
+                "Source": mounts.src,
+                "Destination": mounts.tgt,
+                "ReadOnly": false,
+                "Type": "volume"
+            });
         }
 
         that.docker.createContainer(options).then(function (container) {

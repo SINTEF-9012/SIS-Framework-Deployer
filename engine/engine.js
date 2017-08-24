@@ -44,7 +44,7 @@ var engine = (function () {
 
 function run(dm) {
     var comp = dm.get_all_hosted();
-    var nb = comp.length;
+    var nb = 0;
     var tmp = 0;
 
     for (var i in comp) {
@@ -52,12 +52,13 @@ function run(dm) {
         var host = dm.find_node_named(host_id);
         var connector = dc();
         if (host._type === "docker_host") {
+            nb++;
             if (comp[i]._type === "node_red") {
                 //then we deploy node red
                 //TODO: what if port_bindings is empty?
-                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework"); //
+                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework", comp[i].docker_resource.mounts); //
             } else {
-                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image);
+                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image, comp[i].docker_resource.mounts);
             }
         }
     }
@@ -87,15 +88,18 @@ function run(dm) {
                     //For each link starting from the component we add a websocket out component
                     for (var j in src_tab) {
                         var tgt_component = dm.find_node_named(src_tab[j].target);
+                        var source_component = dm.find_node_named(src_tab[j].src);
                         var tgt_host_id = tgt_component.id_host;
                         var tgt_host = dm.find_node_named(tgt_host_id);
-                        flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"45b2f448.af7ff4","x":331.5,"y":237,"wires":[]},{"id":"45b2f448.af7ff4","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/dist","wholemsg":"false"},';
+                        var client = uuidv1();
+                        flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
                     }
 
                     //For each link ending in the component we add a websocket in component
                     for (var z in tgt_tab) {
+                        var server = uuidv1();
                         var src_component = dm.find_node_named(tgt_tab[z].src);
-                        flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"9217e0a9.bc82c8","client":"","x":143.5,"y":99,"wires":[]},{"id":"9217e0a9.bc82c8","type":"websocket-listener","z":"","path":"/ws/dist","wholemsg":"false"},';
+                        flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
                     }
 
                     //Remove the last ','
