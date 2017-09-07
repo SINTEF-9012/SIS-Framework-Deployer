@@ -56,7 +56,7 @@ var comparator = function (dm) {
         for (var i in links) {
             var tmp_link = target_dm.find_link_named(links[i].name);
             if (tmp_host === undefined) {
-                result.list_of_added_links.push(links[i]);
+                result.list_of_removed_links.push(links[i]);
             }
         }
 
