@@ -99,6 +99,7 @@ var docker_connector = function () {
                 bus.emit('container-started', container.id, that.comp_name);
             });
         }).catch(function (err) {
+            bus.emit('container-error', that.comp_name);
             console.log(err);
         });
 
