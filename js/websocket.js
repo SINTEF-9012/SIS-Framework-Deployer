@@ -31,7 +31,11 @@ var ws_client = function () {
             console.log('Connection closed: ' + that.socket.readyState);
         };
 
-        that.socket.onmessage = function (msg) {};
+        that.socket.onmessage = function (msg) {
+            if (msg[0] === "!") { // This is a notification
+                alertMessage("info", msg, 3000);
+            }
+        };
     };
 
     that.send = function (text) {

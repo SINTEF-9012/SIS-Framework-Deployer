@@ -4,12 +4,26 @@ var bus = require('./event-bus.js');
 var docker_connector = function () {
     var that = {};
     that.docker = {};
+    that.comp_name = '';
 
-    that.buildAndDeploy = function (endpoint, port, port_bindings, devices, command, image, mounts) {
+    that.stopAndRemove = function (container_id, endpoint, port) {
+        that.docker = new Docker({ //TODO:Refactor
+            host: endpoint,
+            port: port
+        });
+        that.docker.getContainer(container_id).stop(function (done) {
+            that.docker.getContainer(container_id).remove(function (removed) {
+                bus.emit('removed', container_id);
+            });
+        });
+    };
+
+    that.buildAndDeploy = function (endpoint, port, port_bindings, devices, command, image, mounts, compo_name) {
         that.docker = new Docker({
             host: endpoint,
             port: port
         });
+        that.comp_name = compo_name;
         that.docker.pull(image, function (err, stream) {
             if (stream !== null) {
                 stream.pipe(process.stdout, {
@@ -82,7 +96,7 @@ var docker_connector = function () {
         that.docker.createContainer(options).then(function (container) {
             //return container.start();
             container.start(function () {
-                bus.emit('container-started');
+                bus.emit('container-started', container.id, that.comp_name);
             });
         }).catch(function (err) {
             console.log(err);

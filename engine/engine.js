@@ -5,10 +5,13 @@ var mm = require('../metamodel/allinone.js');
 var dc = require('./docker-connector.js');
 var bus = require('./event-bus.js');
 var uuidv1 = require('uuid/v1');
+var comp = require('./model-comparison.js')
 
 
 var engine = (function () {
     var that = {};
+    that.dep_model = 'undefined';
+    that.diff = {};
 
     that.webSocketServerObject = new webSocketServer({
         port: 9060
@@ -29,8 +32,29 @@ var engine = (function () {
                 dm.revive_components(data.components);
                 dm.revive_links(data.links);
                 console.log("\n" + JSON.stringify(dm) + "\n");
-                //Deploy
-                run(dm);
+
+
+                if (that.dep_model === 'undefined') {
+                    that.dep_model = dm;
+                    //Deploy: keep it because I know it works :p
+                    run(that.dep_model);
+                } else {
+                    //Compare model
+                    var comparator = comp(that.dep_model);
+                    that.diff = comparator.compare(dm);
+                    that.dep_model = dm;
+
+
+                    //First do all the removal stuff
+                    console.log("Stopping removed containers");
+                    removal(that.diff, that.dep_model);
+
+                    //Deploy only the added stuff
+                    console.log("Starting new containers");
+                    deploy(that.diff, that.dep_model);
+
+                }
+
             });
 
             socketObject.on('close', function (c, d) {
@@ -42,7 +66,41 @@ var engine = (function () {
     return that;
 }());
 
-function run(dm) {
+function removal(diff, dm) {
+    var removed = diff.list_of_removed_components;
+    console.log('removal =>' + JSON.stringify(removed));
+    for (var i in removed) {
+        var host_id = removed[i].id_host;
+        var host = dm.find_node_named(host_id);
+        var connector = dc();
+        connector.stopAndRemove(removed[i].container_id, host.ip, host.port);
+    }
+}
+
+
+function deploy(diff, dm) {
+    var comp = diff.list_of_added_components;
+    var nb = 0;
+
+    for (var i in comp) {
+        var host_id = comp[i].id_host;
+        var host = dm.find_node_named(host_id);
+        var connector = dc();
+        if (host._type === "docker_host") {
+            nb++;
+            if (comp[i]._type === "node_red") {
+                //then we deploy node red
+                //TODO: what if port_bindings is empty?
+                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework", comp[i].docker_resource.mounts, comp[i].name); //
+            } else {
+                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image, comp[i].docker_resource.mounts, comp[i].name);
+            }
+        }
+    }
+    return nb;
+}
+
+function run(dm) { //TODO: factorize
     var comp = dm.get_all_hosted();
     var nb = 0;
     var tmp = 0;
@@ -56,17 +114,21 @@ function run(dm) {
             if (comp[i]._type === "node_red") {
                 //then we deploy node red
                 //TODO: what if port_bindings is empty?
-                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework", comp[i].docker_resource.mounts); //
+                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework", comp[i].docker_resource.mounts, comp[i].name); //
             } else {
-                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image, comp[i].docker_resource.mounts);
+                connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image, comp[i].docker_resource.mounts, comp[i].name);
             }
         }
     }
 
     //We collect all the started events, once they are all received we generate the flow skeleton based on the links
-    bus.on('container-started', function () {
+    bus.on('container-started', function (container_id, comp_name) {
         tmp++;
         console.log(tmp + ' :: ' + nb);
+        //Add container id to the component
+        var comp = dm.find_node_named(comp_name);
+        comp.container_id = container_id;
+
         if (tmp >= nb) {
             tmp = 0;
             var comp_tab = dm.get_all_hosted();

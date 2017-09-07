@@ -27,7 +27,7 @@ var deployment_model = function (spec) {
     that.remove_link = function (link) {
         var i = that.links.indexOf(link);
         if (i > -1) {
-            that.links.splice(i, 1); //The second parameter of splice is the number of elements to remove. Note that splice modifies the array in place and returns a new array containing the elements that have been removed. 
+            that.links.splice(i, 1);
         }
     };
 
@@ -48,6 +48,17 @@ var deployment_model = function (spec) {
 
     that.find_node_named = function (name) {
         var tab = that.components.filter(function (elem) {
+            if (elem.name === name) {
+                return elem;
+            }
+        });
+        if (tab.length > 0) {
+            return tab[0];
+        }
+    };
+
+    that.find_link_named = function (name) {
+        var tab = that.links.filter(function (elem) {
             if (elem.name === name) {
                 return elem;
             }
