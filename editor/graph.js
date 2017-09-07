@@ -66,7 +66,7 @@ var cy = window.cy = cytoscape({
                 'background-image': './img/node-red-256.png',
             }
     }
-  ],
+    ],
 
     elements: {
         nodes: [],
