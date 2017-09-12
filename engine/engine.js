@@ -223,7 +223,7 @@ var engine = (function () {
 
 
 
-
+//TODO: to be factorised with the run function. This class should be heavily refactored
 function deploy(diff, dm) {
     var comp = diff.list_of_added_components;
     var nb = 0;
@@ -307,6 +307,7 @@ function deploy(diff, dm) {
 
                 //TODO: Manage removed links
 
+
                 //Remove the last ','
                 flow = flow.slice(0, -1);
                 //Close the flow description
@@ -353,7 +354,9 @@ function sendPost(tgt_host, tgt_port, data, tgt_tab) {
     req.on('error', function (err) {
         console.log("Connection to " + tgt_host + " not yet open");
         setTimeout(function () {
-            bus.emit('link-ko', tgt_tab[w].name);
+            for (var w in tgt_tab) {
+                bus.emit('link-ko', tgt_tab[w].name);
+            }
             sendPost(tgt_host, tgt_port, data, tgt_tab); //we try to reconnect if the connection as failed
         }, 5000);
     });
