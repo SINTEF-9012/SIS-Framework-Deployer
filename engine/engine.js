@@ -79,6 +79,14 @@ var engine = (function () {
         that.socketObject.send("#" + JSON.stringify(s));
     });
 
+    bus.on('link-ko', function (link_name) {
+        var s = {
+            node: link_name,
+            status: 'KO'
+        };
+        that.socketObject.send("#" + JSON.stringify(s));
+    });
+
     that.run = function (dm) { //TODO: factorize
         var comp = dm.get_all_hosted();
         var nb = 0;
@@ -188,7 +196,7 @@ var engine = (function () {
                     //Compare model
                     var comparator = comp(that.dep_model);
                     that.diff = comparator.compare(dm);
-                    that.dep_model = dm;
+                    that.dep_model = dm; //target model becomes current
 
 
                     //First do all the removal stuff
@@ -235,6 +243,83 @@ function deploy(diff, dm) {
             }
         }
     }
+
+    bus.on('container-started', function (container_id, comp_name) {
+        tmp++;
+        console.log(tmp + ' :: ' + nb);
+        //Add container id to the component
+        var comp = dm.find_node_named(comp_name);
+        comp.container_id = container_id;
+
+
+        //Send status info to the UI
+        var s = {
+            node: comp_name,
+            status: 'running'
+        };
+        that.socketObject.send("#" + JSON.stringify(s));
+
+        if (tmp >= nb) {
+            tmp = 0;
+
+            var comp_tab = dm.get_all_hosted();
+
+            //For all hosted components we generate the websocket proxies
+            for (var i in comp_tab) {
+                var host_id = comp_tab[i].id_host;
+                var host = dm.find_node_named(host_id);
+            }
+
+            //Get all links that start from the component
+            var src_tab = dm.get_all_outputs_of_component(comp_tab[i]).filter(function (elem) {
+                if (diff.list_of_added_links.includes(elem)) {
+                    return elem;
+                }
+            });
+            //Get all links that end in the component
+            var tgt_tab = dm.get_all_inputs_of_component(comp_tab[i]).filter(function (elem) {
+                if (diff.list_of_added_links.includes(elem)) {
+                    return elem;
+                }
+            });
+
+            if ((src_tab.length > 0) || (tgt_tab.length > 0)) {
+                var flow = '[';
+
+                //TODO: First check content of the node-red instance
+
+                //For each link starting from the component we add a websocket out component
+                for (var j in src_tab) {
+                    var tgt_component = dm.find_node_named(src_tab[j].target);
+                    var source_component = dm.find_node_named(src_tab[j].src);
+                    var tgt_host_id = tgt_component.id_host;
+                    var tgt_host = dm.find_node_named(tgt_host_id);
+                    var client = uuidv1();
+                    flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+                }
+
+                //For each link ending in the component we add a websocket in component
+                for (var z in tgt_tab) {
+                    var server = uuidv1();
+                    var src_component = dm.find_node_named(tgt_tab[z].src);
+                    flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
+                }
+
+                //TODO: Manage removed links
+
+                //Remove the last ','
+                flow = flow.slice(0, -1);
+                //Close the flow description
+                flow += ']';
+
+                //Send the request to the component
+                sendPost(host.ip, comp_tab[i].port, flow, tgt_tab);
+            }
+
+        }
+
+    });
+
     return nb;
 }
 
@@ -242,7 +327,7 @@ function deploy(diff, dm) {
 function sendPost(tgt_host, tgt_port, data, tgt_tab) {
     var options = {
         host: tgt_host,
-        path: '/flows', //The Flows API of nodered, which set the active flow configuration
+        path: '/flow', //The Flows API of nodered, which set the active flow configuration
         port: tgt_port,
         method: 'POST',
         headers: {
@@ -268,6 +353,7 @@ function sendPost(tgt_host, tgt_port, data, tgt_tab) {
     req.on('error', function (err) {
         console.log("Connection to " + tgt_host + " not yet open");
         setTimeout(function () {
+            bus.emit('link-ko', tgt_tab[w].name);
             sendPost(tgt_host, tgt_port, data, tgt_tab); //we try to reconnect if the connection as failed
         }, 5000);
     });

@@ -21,7 +21,7 @@ var comparator = function (dm) {
                 if (target_comps[i].hasOwnProperty('id_host')) {
                     result.list_of_added_components.push(target_comps[i]);
                 } else {
-                    result.list_of_added_hostss.push(target_comps[i]);
+                    result.list_of_added_hosts.push(target_comps[i]);
                 }
             }
         }
