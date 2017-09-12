@@ -110,7 +110,6 @@ var deployment_model = function (spec) {
 
 /*****************************/
 /*Component                  */
-/*                           */
 /*****************************/
 
 var component = function (spec) {
@@ -192,6 +191,7 @@ var docker_host = function (spec) {
 };
 
 /*****************************/
+/* VM Host                   */
 /*****************************/
 var vm_host = function (spec) {
     var that = host(spec);

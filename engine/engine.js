@@ -22,20 +22,59 @@ var engine = (function () {
     that.remove_containers = function (diff, dm) {
         var removed = diff.list_of_removed_components;
         console.log('removal =>' + JSON.stringify(removed));
+        var connector = dc();
         for (var i in removed) {
             var host_id = removed[i].id_host;
-            var host = dm.find_node_named(host_id);
-            var connector = dc();
-            connector.stopAndRemove(removed[i].container_id, host.ip, host.port);
+            var host = dm.find_node_named(host_id); //This cannot be done!
+            if (host === undefined) {
+                //Need to find the host in the old model
+                var rem_hosts = diff.list_removed_hosts;
+                var tab = rem_hosts.filter(function (elem) {
+                    if (elem.name === host_id) {
+                        return elem;
+                    }
+                });
+                if (tab.length > 0) {
+                    connector.stopAndRemove(removed[i].container_id, tab[0].ip, tab[0].port);
+                }
+            } else {
+                connector.stopAndRemove(removed[i].container_id, host.ip, host.port);
+            }
         }
     };
 
 
+    //To be refactore
     bus.on('container-error', function (comp_name) {
         //Send status info to the UI
         var s = {
             node: comp_name,
             status: 'error'
+        };
+        that.socketObject.send("#" + JSON.stringify(s));
+    });
+
+    bus.on('container-config', function (comp_name) {
+        //basically, host is accessible
+        var host_id = that.dep_model.find_node_named(comp_name).id_host;
+        var h = {
+            node: host_id,
+            status: 'running'
+        };
+        that.socketObject.send("#" + JSON.stringify(h));
+
+        //Send status info to the UI
+        var s = {
+            node: comp_name,
+            status: 'config'
+        };
+        that.socketObject.send("#" + JSON.stringify(s));
+    });
+
+    bus.on('link-ok', function (link_name) {
+        var s = {
+            node: link_name,
+            status: 'OK'
         };
         that.socketObject.send("#" + JSON.stringify(s));
     });
@@ -118,7 +157,7 @@ var engine = (function () {
                         flow += ']';
 
                         //Send the request to the component
-                        sendPost(host.ip, comp_tab[i].port, flow);
+                        sendPost(host.ip, comp_tab[i].port, flow, tgt_tab);
                     }
                 }
             }
@@ -200,7 +239,7 @@ function deploy(diff, dm) {
 }
 
 
-function sendPost(tgt_host, tgt_port, data) {
+function sendPost(tgt_host, tgt_port, data, tgt_tab) {
     var options = {
         host: tgt_host,
         path: '/flows', //The Flows API of nodered, which set the active flow configuration
@@ -218,18 +257,23 @@ function sendPost(tgt_host, tgt_port, data) {
         });
 
         response.on('end', function () {
-            console.log(str);
+            console.log("Request completed " + str);
+            for (var w in tgt_tab) { //if success, send feedback
+                bus.emit('link-ok', tgt_tab[w].name);
+            }
         });
-
 
     });
 
     req.on('error', function (err) {
         console.log("Connection to " + tgt_host + " not yet open");
         setTimeout(function () {
-            sendPost(tgt_host, tgt_port, data); //we try to reconnect if the connection as failed
+            sendPost(tgt_host, tgt_port, data, tgt_tab); //we try to reconnect if the connection as failed
         }, 5000);
     });
+
+
+
     //This is the data we are posting, it needs to be a string or a buffer
     req.write(data);
     req.end();

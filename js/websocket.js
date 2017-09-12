@@ -39,20 +39,37 @@ var ws_client = function () {
                 if (msg[0] === "#") { //This is about status, contains status info, and node name
                     var json = JSON.parse(msg.substr(1, msg.length));
                     var node = cy.getElementById(json.node);
-                    console.log(node);
-                    //status can be running or error
-                    if (json.status === "running") {
-                        alertMessage("success", "Node: " + node.id() + " Started", 4000);
+                    switch (json.status) {
+                    case "running":
+                        alertMessage("success", "Node: " + node.id() + " Started", 3000);
                         cy.$('#' + node.id()).css({
-                            'border-width': 2,
+                            'border-width': 1,
                             'border-color': '#4A4'
                         });
-                    } else {
-                        alertMessage("error", "Could not start" + node.id(), 4000);
+                        break;
+                    case "config":
+                        alertMessage("success", node.id() + " is being configured", 3000);
                         cy.$('#' + node.id()).css({
-                            'border-width': 2,
+                            'border-width': 1,
+                            'border-color': 'orange'
+                        });
+                        break;
+                    case "error":
+                        alertMessage("error", "Could not start" + node.id(), 3000);
+                        cy.$('#' + node.id()).css({
+                            'border-width': 1,
                             'border-color': '#A33'
                         });
+                        break;
+                    case "OK": //It is a link
+                        alertMessage("success", "Link configured!", 3000);
+                        cy.$('#' + node.id()).css({
+                            'background-color': '#4A4',
+                            'line-color': '#4A4',
+                            'target-arrow-color': '#4A4',
+                            'source-arrow-color': '#4A4'
+                        });
+                        break;
                     }
                 }
             }

@@ -236,11 +236,17 @@ $('#save').on('click', function (evt) {
 
 
 
-
 /***************************************/
 /*Deploy                               */
 /***************************************/
 var client = ws_client();
+
+$('#removeAll').on('click', function (evt) {
+    cy.elements().remove();
+    var model = "{}";
+    client.send(model);
+    alertMessage("success", "Model sent!", 3000);
+});
 
 $('#deployAll').on('click', function (evt) {
     var model = JSON.stringify(dm);
