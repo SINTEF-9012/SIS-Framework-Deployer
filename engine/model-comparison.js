@@ -33,10 +33,8 @@ var comparator = function (dm) {
             console.log(tmp_host);
             if (tmp_host === undefined) {
                 if (comps[i].hasOwnProperty('id_host')) {
-                    console.log("=>" + comps[i]);
                     result.list_of_removed_components.push(comps[i]);
                 } else {
-                    console.log("->" + comps[i]);
                     result.list_removed_hosts.push(comps[i]);
                 }
             }

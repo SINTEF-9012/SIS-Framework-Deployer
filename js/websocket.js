@@ -70,7 +70,7 @@ var ws_client = function () {
                             'source-arrow-color': '#4A4'
                         });
                         break;
-                    case "OK": //It is a link
+                    case "OK": //It is a link   
                         cy.$('#' + node.id()).css({
                             'background-color': 'orange',
                             'line-color': 'orange',

@@ -44,7 +44,7 @@ var engine = (function () {
     };
 
 
-    //To be refactore
+    //To be refactored
     bus.on('container-error', function (comp_name) {
         //Send status info to the UI
         var s = {
@@ -140,32 +140,8 @@ var engine = (function () {
 
                     if ((src_tab.length > 0) || (tgt_tab.length > 0)) {
 
-                        var flow = '[';
+                        sendGet(host.ip, comp_tab[i].port, src_tab, tgt_tab, dm, generate_components);
 
-                        //For each link starting from the component we add a websocket out component
-                        for (var j in src_tab) {
-                            var tgt_component = dm.find_node_named(src_tab[j].target);
-                            var source_component = dm.find_node_named(src_tab[j].src);
-                            var tgt_host_id = tgt_component.id_host;
-                            var tgt_host = dm.find_node_named(tgt_host_id);
-                            var client = uuidv1();
-                            flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
-                        }
-
-                        //For each link ending in the component we add a websocket in component
-                        for (var z in tgt_tab) {
-                            var server = uuidv1();
-                            var src_component = dm.find_node_named(tgt_tab[z].src);
-                            flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
-                        }
-
-                        //Remove the last ','
-                        flow = flow.slice(0, -1);
-                        //Close the flow description
-                        flow += ']';
-
-                        //Send the request to the component
-                        sendPost(host.ip, comp_tab[i].port, flow, tgt_tab);
                     }
                 }
             }
@@ -178,7 +154,6 @@ var engine = (function () {
             that.socketObject = socketObject;
 
             socketObject.on('message', function (message) {
-                console.log('The Message Received:' + message);
 
                 //Load the model
                 var data = JSON.parse(message);
@@ -284,37 +259,9 @@ function deploy(diff, dm) {
             });
 
             if ((src_tab.length > 0) || (tgt_tab.length > 0)) {
-                var flow = '[';
 
-                //TODO: First check content of the node-red instance
+                sendGet(host.ip, comp_tab[i].port, src_tab, tgt_tab, dm, generate_components);
 
-                //For each link starting from the component we add a websocket out component
-                for (var j in src_tab) {
-                    var tgt_component = dm.find_node_named(src_tab[j].target);
-                    var source_component = dm.find_node_named(src_tab[j].src);
-                    var tgt_host_id = tgt_component.id_host;
-                    var tgt_host = dm.find_node_named(tgt_host_id);
-                    var client = uuidv1();
-                    flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
-                }
-
-                //For each link ending in the component we add a websocket in component
-                for (var z in tgt_tab) {
-                    var server = uuidv1();
-                    var src_component = dm.find_node_named(tgt_tab[z].src);
-                    flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
-                }
-
-                //TODO: Manage removed links
-
-
-                //Remove the last ','
-                flow = flow.slice(0, -1);
-                //Close the flow description
-                flow += ']';
-
-                //Send the request to the component
-                sendPost(host.ip, comp_tab[i].port, flow, tgt_tab);
             }
 
         }
@@ -324,15 +271,77 @@ function deploy(diff, dm) {
     return nb;
 }
 
+//This part has to be heavily refactored... Too late for this right now...
+function generate_components(ip_host, tgt_port, src_tab, tgt_tab, dm, old_components) {
+    //We keep the old elements without the generated ones
+    var filtered_old_components = old_components.filter(function (elem) {
+        if (elem.name !== undefined) {
+            if (!elem.name.startsWith("to_") && !elem.name.startsWith("from_")) {
+                return elem;
+            }
+        }
+    });
+
+
+    var flow = '[';
+
+    //For each link starting from the component we add a websocket out component
+    for (var j in src_tab) {
+        var tgt_component = dm.find_node_named(src_tab[j].target);
+        var source_component = dm.find_node_named(src_tab[j].src);
+        var tgt_host_id = tgt_component.id_host;
+        var tgt_host = dm.find_node_named(tgt_host_id);
+        var client = uuidv1();
+        flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+    }
+
+    //For each link ending in the component we add a websocket in component
+    for (var z in tgt_tab) {
+        var server = uuidv1();
+        var src_component = dm.find_node_named(tgt_tab[z].src);
+        flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
+    }
+
+    //Remove the last ','
+    flow = flow.slice(0, -1);
+    //Close the flow description
+    flow += ']';
+
+    //We concat the old flow with the new one
+    var t = JSON.parse(flow);
+    var result = filtered_old_components.concat(t)
+
+
+    sendPost(ip_host, tgt_port, JSON.stringify(result), tgt_tab);
+}
+
+function sendGet(tgt_host, tgt_port, src_tab, tgt_tab, dm, callback) {
+    var opt = {
+        host: tgt_host,
+        path: '/flows', //The Flows API of nodered, which set the active flow configuration
+        port: tgt_port
+    };
+    http.get(opt, function (resp) {
+        resp.on('data', function (chunk) {
+            callback(tgt_host, tgt_port, src_tab, tgt_tab, dm, JSON.parse(chunk));
+        });
+    }).on("error", function (e) {
+        console.log("Got error: " + e.message);
+        setTimeout(function () { //Should only test n times
+            sendGet(tgt_host, tgt_port, src_tab, tgt_tab, dm, callback);
+        }, 2000);
+    });
+}
 
 function sendPost(tgt_host, tgt_port, data, tgt_tab) {
     var options = {
         host: tgt_host,
-        path: '/flow', //The Flows API of nodered, which set the active flow configuration
+        path: '/flows', //The Flows API of nodered, which set the active flow configuration
         port: tgt_port,
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Node-RED-Deployment-Type': 'flows' //only flows that contain modified nodes are stopped before the new configuration is applied.
         }
     };
 

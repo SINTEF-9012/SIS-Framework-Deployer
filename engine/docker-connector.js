@@ -68,7 +68,6 @@ var docker_connector = function () {
             options.Cmd = ['/bin/bash', '-c', command];
         }
 
-        console.log('Port: ' + port);
         options.ExposedPorts = JSON.parse(exposedPort);
         options.HostConfig = {};
         options.HostConfig.PortBindings = JSON.parse(port);
