@@ -1,0 +1,418 @@
+{
+    "dm": {
+        "name": "demo",
+        "components": [{
+            "name": "docker_raspberry",
+            "properties": [],
+            "id": "rasp",
+            "ip": "192.168.1.17",
+            "port": ["2376"],
+            "credentials": {
+                "login": "ubuntu",
+                "password": "ubuntu"
+            },
+            "_type": "docker_host"
+        }, {
+            "name": "docker_mac",
+            "properties": [],
+            "id": "docker_mac",
+            "ip": "192.168.1.28",
+            "port": ["2376"],
+            "credentials": {
+                "login": "ubuntu",
+                "password": "ubuntu"
+            },
+            "_type": "docker_host"
+        }, {
+            "name": "my_mac",
+            "properties": [],
+            "id": "my_mac",
+            "ip": "192.168.1.28",
+            "port": ["1880"],
+            "credentials": {
+                "login": "ubuntu",
+                "password": "ubuntu"
+            },
+            "_type": "external_host"
+        }, {
+            "name": "nr_rasp",
+            "properties": [],
+            "id": "nr_rasp",
+            "id_host": "docker_raspberry",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "1880": "1880"
+                },
+                "devices": {
+                    "PathOnHost": "/dev/ttyUSB0",
+                    "PathInContainer": "/dev/ttyUSB0",
+                    "CgroupPermissions": "rwm"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "port": "1880",
+            "_type": "node_red"
+        }, {
+            "name": "nr",
+            "properties": [],
+            "id": "nr",
+            "id_host": "docker_mac",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "1881": "1880"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "port": "1881",
+            "_type": "node_red"
+        }, {
+            "name": "nr_thingml",
+            "properties": [],
+            "id": "nr_thingml",
+            "id_host": "my_mac",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "22": "22",
+                    "80": "80"
+                },
+                "devices": {
+                    "PathOnHost": "",
+                    "PathInContainer": "",
+                    "CgroupPermissions": "rwm"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "port": "1880",
+            "_type": "node_red"
+        }, {
+            "name": "couchdb",
+            "properties": [],
+            "id": "couchdb",
+            "id_host": "docker_mac",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "couchdb",
+                "command": "",
+                "port_bindings": {
+                    "5984": "5984"
+                },
+                "devices": {
+                    "PathOnHost": "",
+                    "PathInContainer": "",
+                    "CgroupPermissions": "rwm"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "_type": "external_node"
+        }],
+        "links": [{
+            "name": "rasp_nr",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "nr_rasp",
+            "target": "nr"
+        }, {
+            "name": "rasp_thingml",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "nr_rasp",
+            "target": "nr_thingml"
+        }, {
+            "name": "thingml_rorasp",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "nr_thingml",
+            "target": "nr_rasp"
+        }, {
+            "name": "fromnr_rorasp",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "nr",
+            "target": "nr_rasp"
+        }, {
+            "name": "fromnr_tothingml",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "nr",
+            "target": "nr_thingml"
+        }]
+    },
+    "graph": {
+        "elements": {
+            "nodes": [{
+                "data": {
+                    "id": "docker_raspberry"
+                },
+                "position": {
+                    "x": 235.23988673427544,
+                    "y": 108.07402308861346
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "container"
+            }, {
+                "data": {
+                    "id": "docker_mac"
+                },
+                "position": {
+                    "x": 474.8471395138333,
+                    "y": 83.85195382277308
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "container"
+            }, {
+                "data": {
+                    "id": "my_mac"
+                },
+                "position": {
+                    "x": 379.56304944324097,
+                    "y": 206.98080592412833
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "container"
+            }, {
+                "data": {
+                    "id": "nr_rasp",
+                    "parent": "docker_raspberry"
+                },
+                "position": {
+                    "x": 235.23988673427544,
+                    "y": 108.07402308861346
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "node_red"
+            }, {
+                "data": {
+                    "id": "nr",
+                    "parent": "docker_mac"
+                },
+                "position": {
+                    "x": 499.6641428863662,
+                    "y": 95.96298845569326
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "node_red"
+            }, {
+                "data": {
+                    "id": "nr_thingml",
+                    "parent": "my_mac"
+                },
+                "position": {
+                    "x": 379.56304944324097,
+                    "y": 206.98080592412833
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "node_red"
+            }, {
+                "data": {
+                    "id": "couchdb",
+                    "parent": "docker_mac"
+                },
+                "position": {
+                    "x": 450.0301361413004,
+                    "y": 71.7409191898529
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }],
+            "edges": [{
+                "data": {
+                    "id": "rasp_nr",
+                    "source": "nr_rasp",
+                    "target": "nr"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "rasp_thingml",
+                    "source": "nr_rasp",
+                    "target": "nr_thingml"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "thingml_rorasp",
+                    "source": "nr_thingml",
+                    "target": "nr_rasp"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "fromnr_rorasp",
+                    "source": "nr",
+                    "target": "nr_rasp"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "fromnr_tothingml",
+                    "source": "nr",
+                    "target": "nr_thingml"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }]
+        },
+        "style": [{
+            "selector": "node",
+            "style": {
+                "label": "data(id)",
+                "background-fit": "contain",
+                "background-image-opacity": "0.3",
+                "text-valign": "center",
+                "text-halign": "center",
+                "font-size": "4px",
+                "font-weight": "bold"
+            }
+        }, {
+            "selector": "node.container",
+            "style": {
+                "padding": "10px",
+                "text-valign": "top",
+                "text-halign": "center",
+                "background-color": "#DDD",
+                "font-size": "8px",
+                "font-weight": "normal",
+                "shape": "rectangle"
+            }
+        }, {
+            "selector": "edge",
+            "style": {
+                "curve-style": "bezier",
+                "target-arrow-shape": "triangle"
+            }
+        }, {
+            "selector": ":selected",
+            "style": {
+                "background-color": "black",
+                "line-color": "black",
+                "target-arrow-color": "black",
+                "source-arrow-color": "black"
+            }
+        }, {
+            "selector": "node.questionable",
+            "style": {
+                "border-color": "#A33",
+                "background-color": "#B55",
+                "shape": "roundrectangle"
+            }
+        }, {
+            "selector": "node.node_red",
+            "style": {
+                "background-image": "./img/node-red-256.png"
+            }
+        }],
+        "zoomingEnabled": true,
+        "userZoomingEnabled": true,
+        "zoom": 2.805433637951725,
+        "minZoom": 1e-50,
+        "maxZoom": 1e+50,
+        "panningEnabled": true,
+        "userPanningEnabled": true,
+        "pan": {
+            "x": -374.92008812370824,
+            "y": -105.38458504296106
+        },
+        "boxSelectionEnabled": false,
+        "renderer": {
+            "name": "canvas"
+        }
+    }
+}

@@ -21,7 +21,6 @@ var engine = (function () {
 
     that.remove_containers = function (diff, dm) {
         var removed = diff.list_of_removed_components;
-        console.log('removal =>' + JSON.stringify(removed));
         var connector = dc();
         for (var i in removed) {
             var host_id = removed[i].id_host;

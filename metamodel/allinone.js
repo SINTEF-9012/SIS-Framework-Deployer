@@ -210,8 +210,9 @@ var external_host = function (spec) {
     return that;
 };
 
-/*****************************/
-/*****************************/
+/******************************************/
+/* Software node (aka. Internal component)*/
+/******************************************/
 var software_node = function (spec) {
     var that = component(spec);
     that.id_host = spec.id_host || null;
@@ -221,8 +222,9 @@ var software_node = function (spec) {
     return that;
 };
 
-/*****************************/
-/*****************************/
+/******************************/
+/* Specific Node-red component*/
+/******************************/
 var node_red = function (spec) {
     var that = software_node(spec); //the inheritance
     that.port = spec.port || '1880';

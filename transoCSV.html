@@ -1,0 +1,98 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <form action="#">
+        Database:
+        <select id="database"></select>
+        <br/>
+        <br/> Program Name:
+        <select id="prg_name"></select>
+        <br/>
+        <br/> Start time:
+        <input id="start_time"></input>
+        End time:
+        <input id="end_time"></input>
+        <br/>
+        <br/>
+        <button id="go">Get data!</button>
+    </form>
+
+    <script src="js/jquery.js"></script>
+    <script>
+        window.onload = getAllDatabases();
+        $('#database').on('change', function () {
+            getAllProgramNames($(this).val());
+        });
+
+        $('#prg_name').on('change', function () {
+            getProgramStartTime($(this).val());
+            getProgramEndTime($(this).val());
+        });
+
+        $('#go').on('click', function () {
+            var startDate = new Date($('#start_time').val());
+            var epochStartDate = startDate.getTime();
+            var endDate = new Date($('#end_time').val());
+            var epochEndDate = endDate.getTime();
+            getBetweenDates(epochStartDate, epochEndDate);
+        });
+
+        function getAllDatabases() {
+            get("54.75.18.26", "5984", "/_all_dbs", function (data) {
+                var dataJSON = JSON.parse(data);
+                for (var i in dataJSON) {
+                    $("#database").append('<option value="' + dataJSON[i] + '">' + dataJSON[i] + '</option>');
+                }
+            });
+        }
+
+        function getAllProgramNames() {
+            get("54.75.18.26", "5984", "/review/_design/bydates/_view/getAllProgramNames?group=true", function (data) {
+                var dataJSON = JSON.parse(data);
+                var rows = dataJSON.rows;
+                for (var i in rows) {
+                    $("#prg_name").append('<option value=""> </option>');
+                    $("#prg_name").append('<option value="' + rows[i].key + '">' + rows[i].key + '</option>');
+                }
+            });
+        }
+
+        function getProgramStartTime() {
+            get("54.75.18.26", "5984", "/review/_design/bydates/_view/getAllProgramDates?limit=1", function (data) {
+                var dataJSON = JSON.parse(data);
+                var rows = dataJSON.rows;
+                for (var i in rows) {
+                    console.log(rows[i].value);
+                    $("#start_time").val(new Date(parseInt(rows[i].value)).toISOString());
+                }
+            });
+
+        }
+
+        function getProgramEndTime() {
+            get("54.75.18.26", "5984", "/review/_design/bydates/_view/getAllProgramDates?limit=1&descending=true", function (data) {
+                var dataJSON = JSON.parse(data);
+                var rows = dataJSON.rows;
+                for (var i in rows) {
+                    $("#end_time").val(new Date(parseInt(rows[i].value)).toISOString());
+                }
+            });
+        }
+
+        function getBetweenDates(start, end) {
+            window.open('http://54.75.18.26:5984/review/_design/expcsv/_list/expcsv/bydates/bydates?startkey="' + start + '"&endkey="' + end + '"');
+        }
+
+        function get(tgt_host, tgt_port, url, callback) {
+            var url = "http://" + tgt_host + ":" + tgt_port + url;
+            $.get(url, function (data) {
+                callback(data);
+            }, 'text');
+        }
+    </script>
+</body>
+
+</html>
