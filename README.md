@@ -4,9 +4,9 @@ The SIS-Framework aims to facilitate the engineering and continuous deployment o
 ## Metamodel (To be completed)
 The SIS-Framework Modelling language is inspired by component-based approaches in order to facilitate separation of concerns and reusability. In this respect, deployment models can be regarded as assemblies of components exposing ports, and bindings between these ports.
 
-A Component represents a reusable type of software component of a smart IoT system. A Component can be an ExternalComponent xxx (e.g., a database) or an InternalComponent xxx (e.g., an instance of SIS-Node). A component can be associated to Resources. A Resource represents an artefact (e.g., scripts, Docker Containers, etc.) adopted to manage the deployment life-cycle (e.g., download, configure, install, start, and stop). 
+A _component_ represents a reusable type of software component of a smart IoT system. A _Component_ can be an _ExternalComponent_ xxx (e.g., a database) or an _InternalComponent_ xxx (e.g., an instance of SIS-Node). A _component_ can be associated to _Resources_. A _Resource_ represents an artefact (e.g., scripts, Docker Containers, etc.) adopted to manage the deployment life-cycle (e.g., download, configure, install, start, and stop). 
 
-An Host represents a reusable type of xxx that can host Components. A Host can be ExternalHost managed and provided third party or an InternalHost on top of which, Components can be managed and deployed by the SIS-Framework.  
+An _Host_ represents a reusable type of xxx that can host _Components_. A _Host_ can be _ExternalHost_ managed and provided third party or an _InternalHost_ on top of which, _Components_ can be managed and deployed by the SIS-Framework.  
 
 ## Installation
 If you want to run the latest code from git, here's how to get started:
