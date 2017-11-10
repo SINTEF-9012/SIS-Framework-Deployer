@@ -64,9 +64,6 @@ var create_modal = (function () {
         $("#modalDocker").modal();
     }
 
-    $('#external').on('click', function (e) { //ugly, needs to be exensible
-        manage_modal("external_host");
-    });
 
     $('#vm').on('click', function (e) { //ugly, needs to be exensible
         manage_modal("vm_host");
@@ -82,6 +79,10 @@ var create_modal = (function () {
 
     $('#external_comp').on('click', function (e) {
         manage_modal("external_node");
+    });
+
+    $('#device').on('click', function (e) {
+        manage_modal("device");
     });
 
     $('#controller').on('click', function (e) {
@@ -168,6 +169,10 @@ $('#addLink').on('click', function (evt) {
             target: selectedTarget
         }
     };
+    if ($('#isController').is(':checked')) {
+        edge.classes = 'control';
+    }
+
     cy.add(edge);
 
     //add to model
@@ -266,3 +271,10 @@ $('#go').on('click', function () {
 $(document).ready(function () {
     $('#welcomeModal').modal();
 });
+
+/***************************************/
+/*Manage the controller                */
+/***************************************/
+// A node can only be controlled by one controller
+// One node can control several other nodes
+// Only specific sources to access to the controller

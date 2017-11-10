@@ -35,7 +35,8 @@ var cy = window.cy = cytoscape({
                 'background-color': '#DDD',
                 'font-size': '8px',
                 'font-weight': 'normal',
-                'shape': 'rectangle'
+                'shape': 'rectangle',
+                'background-image': './img/docker-official.svg'
             }
     },
         {
@@ -43,6 +44,13 @@ var cy = window.cy = cytoscape({
             css: {
                 'curve-style': 'bezier',
                 'target-arrow-shape': 'triangle'
+            }
+    }, {
+            selector: 'edge.control',
+            css: {
+                'background-color': '#B47',
+                'curve-style': 'bezier',
+                'target-arrow-shape': 'circle'
             }
     },
         {
@@ -64,6 +72,37 @@ var cy = window.cy = cytoscape({
             selector: 'node.node_red',
             css: {
                 'background-image': './img/node-red-256.png',
+            }
+    },
+        {
+            selector: 'node.device',
+            css: {
+                'padding-top': '10px',
+                'padding-left': '10px',
+                'padding-bottom': '10px',
+                'padding-right': '10px',
+                'text-valign': 'top',
+                'text-halign': 'center',
+                'background-color': '#DDD',
+                'font-size': '8px',
+                'font-weight': 'normal',
+                'shape': 'rectangle',
+                'background-image': './img/device.png'
+            }
+    }, {
+            selector: 'node.vm',
+            css: {
+                'padding-top': '10px',
+                'padding-left': '10px',
+                'padding-bottom': '10px',
+                'padding-right': '10px',
+                'text-valign': 'top',
+                'text-halign': 'center',
+                'background-color': '#DDD',
+                'font-size': '8px',
+                'font-weight': 'normal',
+                'shape': 'rectangle',
+                'background-image': './img/server_cloud.png'
             }
     }
     ],
@@ -94,11 +133,19 @@ var graph_factory = function () {
         }
     };
 
+
+    this.create_edge = function (type) {
+        if (type === 'control') {
+            edge.classes = 'control';
+        }
+        return edge;
+    }
+
     this.create_node = function (type) {
         if (type === "external_host") {
             node.classes = 'container';
         } else if (type === "vm_host") {
-            node.classes = 'container';
+            node.classes = 'vm';
         } else if (type === "docker_host") {
             node.classes = 'container';
         } else if (type === "external_node") {
@@ -107,6 +154,8 @@ var graph_factory = function () {
             node.classes = 'node_red';
         } else if (type === "controller") {
             node.classes = 'questionable';
+        } else if (type === "device") {
+            node.classes = 'device';
         }
         return node;
     }

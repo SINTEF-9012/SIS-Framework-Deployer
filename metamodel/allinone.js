@@ -202,10 +202,11 @@ var vm_host = function (spec) {
 
 /*****************************/
 /*****************************/
-var external_host = function (spec) {
+var device = function (spec) {
     var that = host(spec);
-    that._type = "external_host";
-
+    that._type = "device";
+    that.physical_port = "";
+    that.device_type = "";
 
     return that;
 };
@@ -250,6 +251,7 @@ var link = function (spec) {
     var that = component(spec);
     that.src = spec.src || null;
     that.target = spec.target || null;
+    that.isControl = false;
 
     return that;
 }
@@ -296,8 +298,8 @@ var node_factory = function () {
     var component;
 
     this.create_component = function (type, spec) {
-        if (type === "external_host") {
-            component = external_host(spec);
+        if (type === "device") {
+            component = device(spec);
         } else if (type === "vm_host") {
             component = vm_host(spec);
         } else if (type === "docker_host") {
@@ -327,7 +329,7 @@ module.exports = {
     external_node: external_node,
     node_red: node_red,
     software_node: software_node,
-    external_host: external_host,
+    device: device,
     vm_host: vm_host,
     docker_host: docker_host,
     flow: flow,
