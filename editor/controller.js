@@ -31,11 +31,12 @@ var context_menu = (function () {
 
     $('#ctx_delete').on('click', function (evt) {
         if (target_node) {
-            cy.remove(target_link); //remove from the display
-            dm.remove_link(elem); //remove from the model
-        } else {
             cy.remove(target_node); //remove from the display
             dm.remove_component(elem); //remove from the model
+
+        } else {
+            cy.remove(target_link); //remove from the display
+            dm.remove_link(elem); //remove from the model
         }
     });
 
