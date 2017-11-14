@@ -14,7 +14,18 @@ var deployment_model = function (spec) {
     };
 
     that.add_link = function (link) {
-        that.links.push(link);
+        // A node can only be controlled by one controller
+        // One node can control several other nodes
+        if (link.isControl) {
+            if ((that.get_all_inputs_of_component(link.target).length > 0) || (that.get_all_outputs_of_component(link.target).length > 0)) { //no inputs no outputs
+                console.log("Cannot create this link, target node already has links in or out");
+            } else {
+                that.links.push(link);
+            }
+        } else {
+            that.links.push(link);
+        }
+
     };
 
     that.remove_component = function (component) {
@@ -159,15 +170,6 @@ var host = function (spec) {
     return that;
 };
 
-/*****************************/
-/*Controler                 */
-/*****************************/
-var controler = function (spec) {
-    var that = component(spec); //the inheritance
-
-
-    return that;
-};
 
 /*****************************/
 /*Flow                       */
@@ -219,6 +221,7 @@ var software_node = function (spec) {
     that.id_host = spec.id_host || null;
     that.docker_resource = spec.docker_resource || docker_resource({});
     that.ssh_resource = spec.ssh_resource || ssh_resource({});
+    that._type = "software";
 
     return that;
 };
@@ -238,7 +241,7 @@ var node_red = function (spec) {
 /*External node              */
 /*****************************/
 var external_node = function (spec) {
-    var that = software_node(spec); //the inheritance
+    var that = component(spec); //the inheritance
     that._type = "external_node";
 
     return that;
@@ -308,8 +311,8 @@ var node_factory = function () {
             component = external_node(spec);
         } else if (type === "node_red") {
             component = node_red(spec);
-        } else if (type === "controller") {
-            component = controler(spec);
+        } else if (type === "software") {
+            component = software_node(spec);
         }
 
         return component;
@@ -333,7 +336,6 @@ module.exports = {
     vm_host: vm_host,
     docker_host: docker_host,
     flow: flow,
-    controler: controler,
     host: host,
     component: component
 }

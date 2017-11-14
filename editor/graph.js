@@ -152,8 +152,8 @@ var graph_factory = function () {
 
         } else if (type === "node_red") {
             node.classes = 'node_red';
-        } else if (type === "controller") {
-            node.classes = 'questionable';
+        } else if (type === "sofware") {
+
         } else if (type === "device") {
             node.classes = 'device';
         }

@@ -85,8 +85,8 @@ var create_modal = (function () {
         manage_modal("device");
     });
 
-    $('#controller').on('click', function (e) {
-        manage_modal("controller");
+    $('#software').on('click', function (e) {
+        manage_modal("software");
     });
 
     $('#addHost').on('click', function (evt) {
@@ -135,7 +135,7 @@ $('#modalLink').on('show.bs.modal', function () {
     $('#selSrc').html(''); //we clean first
     $('#selTarget').html('');
     for (n in dm.components) {
-        if (dm.components[n].hasOwnProperty('id_host')) { //cannot be an host
+        if (dm.components[n].hasOwnProperty('id_host') || dm.components[n]._type === 'external_node') { //cannot be an host
             $('#selSrc').append('<option>' + dm.components[n].name + '</option>');
             $('#selTarget').append('<option>' + dm.components[n].name + '</option>');
         }
@@ -271,10 +271,3 @@ $('#go').on('click', function () {
 $(document).ready(function () {
     $('#welcomeModal').modal();
 });
-
-/***************************************/
-/*Manage the controller                */
-/***************************************/
-// A node can only be controlled by one controller
-// One node can control several other nodes
-// Only specific sources to access to the controller
