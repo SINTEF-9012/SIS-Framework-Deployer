@@ -3,7 +3,7 @@
 //*****************************************************
 
 var context_menu = (function () {
-    var target_node, elem;
+    var target_node, elem, target_link;
 
     cy.on('cxttap', 'node', function (evt) {
         target_node = evt.target;
@@ -17,18 +17,41 @@ var context_menu = (function () {
         $("#myModal").modal(); // display modal
     });
 
+    cy.on('cxttap', 'edge', function (evt) {
+        target_link = evt.target;
+        elem = dm.find_link_named(target_link.id());
+
+        //Generate the content of the modal
+        $('#form_ctx_modal').html(''); //We clean before we load the content of the modal
+        $('#form_ctx_modal').append('<p><b>Properties of "' + target_link.id() + '":</b></p>'); //The header
+        build_form(elem, 'form_ctx_modal');
+
+        $("#myModal").modal(); // display modal
+    });
+
     $('#ctx_delete').on('click', function (evt) {
-        cy.remove(target_node); //remove from the display
-        dm.remove_component(elem); //remove from the model
+        if (target_node) {
+            cy.remove(target_link); //remove from the display
+            dm.remove_link(elem); //remove from the model
+        } else {
+            cy.remove(target_node); //remove from the display
+            dm.remove_component(elem); //remove from the model
+        }
     });
 
     $('#ctx_save').on('click', function (evt) {
-        //It should laways be a name
+        //It should always be a name
         //First we update the display (in the graph and its style to update the label display)
-        target_node.id($('#ctx_name').val());
-        cy.$('#' + target_node.id()).css({
-            content: $('#ctx_name').val()
-        });
+        if (target_node) {
+            target_node.id($('#ctx_name').val());
+            cy.$('#' + target_node.id()).css({
+                content: $('#ctx_name').val()
+            });
+        } else {
+            if (!target_link.isControl) {
+                cy.$('#' + target_link.id()).removeClass('control');
+            }
+        }
 
         //then the node in the model
         save_form(elem);
@@ -104,12 +127,19 @@ function build_form(elem, container) {
 
     for (var p in props) { // We generate the form from the component's properties
         var item_value = props[p];
-        $('#' + container).append('<div class="input-group"> <span class="input-group-addon">' + item_value + '</span><input type="text" id="ctx_' + item_value + '" class="form-control" placeholder="' + item_value + '"></div><br/>');
-        if (typeof elem[item_value] === 'object') {
-            $('#ctx_' + item_value).val(JSON.stringify(elem[item_value]));
+
+        if (typeof elem[item_value] === 'boolean') {
+            $('#' + container).append('<div class="input-group"> ' + item_value + ' <input id="ctx_' + item_value + '" type="checkbox" class="form-check-input"></div><br/>');
+            $('#ctx_' + item_value).prop('checked', elem[item_value]);
         } else {
-            $('#ctx_' + item_value).val(elem[item_value]);
+            $('#' + container).append('<div class="input-group"> <span class="input-group-addon">' + item_value + '</span><input type="text" id="ctx_' + item_value + '" class="form-control" placeholder="' + item_value + '"></div><br/>');
+            if (typeof elem[item_value] === 'object') {
+                $('#ctx_' + item_value).val(JSON.stringify(elem[item_value]));
+            } else {
+                $('#ctx_' + item_value).val(elem[item_value]);
+            }
         }
+
     }
 }
 
@@ -117,11 +147,16 @@ function save_form(elem) {
     var props = elem.get_all_properties();
     for (var p in props) {
         var item_value = props[p];
-        if (typeof elem[item_value] === 'object') {
-            var val = $('#ctx_' + item_value).val();
-            elem[item_value] = JSON.parse(val);
+
+        if (typeof elem[item_value] === 'boolean') {
+            elem[item_value] = $('#ctx_' + item_value).is(':checked');
         } else {
-            elem[item_value] = $('#ctx_' + item_value).val();
+            if (typeof elem[item_value] === 'object') {
+                var val = $('#ctx_' + item_value).val();
+                elem[item_value] = JSON.parse(val);
+            } else {
+                elem[item_value] = $('#ctx_' + item_value).val();
+            }
         }
     }
     alertMessage("success", "Modification saved!", 2000);
@@ -169,17 +204,21 @@ $('#addLink').on('click', function (evt) {
             target: selectedTarget
         }
     };
+
+    var l = link({});
+    l.name = name;
+    l.src = selectedSrc;
+    l.target = selectedTarget;
     if ($('#isController').is(':checked')) {
         edge.classes = 'control';
+        l.isControl = true;
+    } else {
+        l.isControl = false;
     }
 
     cy.add(edge);
 
     //add to model
-    var l = link({});
-    l.name = name;
-    l.src = selectedSrc;
-    l.target = selectedTarget;
     dm.links.push(l);
 });
 
