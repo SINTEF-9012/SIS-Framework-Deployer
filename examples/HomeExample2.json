@@ -1,0 +1,566 @@
+{
+    "dm": {
+        "name": "demo",
+        "components": [{
+            "name": "Arduino",
+            "properties": [],
+            "id": "arduino",
+            "ip": "127.0.0.1",
+            "port": ["80", "22"],
+            "credentials": {
+                "login": "ubuntu",
+                "password": "ubuntu"
+            },
+            "_type": "device",
+            "physical_port": "/dev/ttyUSB0",
+            "device_type": "arduino uno"
+        }, {
+            "name": "RaspberryPi",
+            "properties": [],
+            "id": "raspberrypi",
+            "ip": "192.168.1.17",
+            "port": ["2376"],
+            "credentials": {
+                "login": "ubuntu",
+                "password": "ubuntu"
+            },
+            "_type": "docker_host"
+        }, {
+            "name": "RaspberryPi2",
+            "properties": [],
+            "id": "raspberrypi2",
+            "ip": "192.168.1.17",
+            "port": ["2376"],
+            "credentials": {
+                "login": "ubuntu",
+                "password": "ubuntu"
+            },
+            "_type": "docker_host"
+        }, {
+            "name": "AWS_VM",
+            "properties": [],
+            "id": "awsvm",
+            "ip": "127.0.0.1",
+            "port": ["80", "22"],
+            "credentials": {
+                "login": "ubuntu",
+                "password": "ubuntu"
+            },
+            "_type": "vm_host"
+        }, {
+            "name": "rfxcom",
+            "properties": [],
+            "id": "rfxcom",
+            "_type": "external_node"
+        }, {
+            "name": "DisplayControl",
+            "properties": [],
+            "id": "displaycontrol",
+            "id_host": "RaspberryPi",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "1882": "1880"
+                },
+                "devices": {
+                    "PathOnHost": "/dev/ttyUSB0",
+                    "PathInContainer": "/dev/ttyUSB0",
+                    "CgroupPermissions": "rwm"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "_type": "node_red",
+            "port": "1880"
+        }, {
+            "name": "DisplayMessage",
+            "properties": [],
+            "id": "displaymessage",
+            "id_host": "Arduino",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "22": "22",
+                    "80": "80"
+                },
+                "devices": {
+                    "PathOnHost": "",
+                    "PathInContainer": "",
+                    "CgroupPermissions": "rwm"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "_type": "software"
+        }, {
+            "name": "ControlTemp",
+            "properties": [],
+            "id": "controltemp",
+            "id_host": "RaspberryPi2",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "1880": "1880"
+                },
+                "devices": {
+                    "PathOnHost": "/dev/ttyUSB0",
+                    "PathInContainer": "/dev/ttyUSB0",
+                    "CgroupPermissions": "rwm"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "_type": "node_red",
+            "port": "1880"
+        }, {
+            "name": "Aggregate",
+            "properties": [],
+            "id": "aggregate",
+            "id_host": "RaspberryPi",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "1881": "1880"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "_type": "node_red",
+            "port": "1880"
+        }, {
+            "name": "CouchDB",
+            "properties": [],
+            "id": "couchdb",
+            "id_host": "AWS_VM",
+            "docker_resource": {
+                "name": "a resource",
+                "image": "ubuntu",
+                "command": "",
+                "port_bindings": {
+                    "22": "22",
+                    "80": "80"
+                },
+                "devices": {
+                    "PathOnHost": "",
+                    "PathInContainer": "",
+                    "CgroupPermissions": "rwm"
+                }
+            },
+            "ssh_resource": {
+                "name": "a resource",
+                "startCommand": "",
+                "downloadCommand": "",
+                "configureCommand": ""
+            },
+            "_type": "software"
+        }],
+        "links": [{
+            "name": "to_couch",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "Aggregate",
+            "target": "CouchDB",
+            "isControl": false
+        }, {
+            "name": "to_aggregate",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "DisplayControl",
+            "target": "Aggregate",
+            "isControl": false
+        }, {
+            "name": "to_aggregate2",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "ControlTemp",
+            "target": "Aggregate",
+            "isControl": false
+        }, {
+            "name": "to_temp",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "Aggregate",
+            "target": "ControlTemp",
+            "isControl": false
+        }, {
+            "name": "controldisplaymessage",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "DisplayControl",
+            "target": "DisplayMessage",
+            "isControl": true
+        }, {
+            "name": "controltempshutter",
+            "properties": [],
+            "id": "a_unique_id",
+            "src": "ControlTemp",
+            "target": "rfxcom",
+            "isControl": true
+        }]
+    },
+    "graph": {
+        "elements": {
+            "nodes": [{
+                "data": {
+                    "id": "Arduino"
+                },
+                "position": {
+                    "x": 460.08334010741225,
+                    "y": 33.05356997698309
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "device"
+            }, {
+                "data": {
+                    "id": "RaspberryPi"
+                },
+                "position": {
+                    "x": 656.5,
+                    "y": 61
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "container"
+            }, {
+                "data": {
+                    "id": "RaspberryPi2"
+                },
+                "position": {
+                    "x": 627,
+                    "y": 169
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "container"
+            }, {
+                "data": {
+                    "id": "AWS_VM"
+                },
+                "position": {
+                    "x": 866,
+                    "y": 108
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "vm"
+            }, {
+                "data": {
+                    "id": "rfxcom"
+                },
+                "position": {
+                    "x": 510.9097352058735,
+                    "y": 177.7559499616385
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "ControlTemp",
+                    "parent": "RaspberryPi2"
+                },
+                "position": {
+                    "x": 627,
+                    "y": 169
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "node_red"
+            }, {
+                "data": {
+                    "id": "DisplayMessage",
+                    "parent": "Arduino"
+                },
+                "position": {
+                    "x": 460.08334010741225,
+                    "y": 33.05356997698309
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "DisplayControl",
+                    "parent": "RaspberryPi"
+                },
+                "position": {
+                    "x": 618,
+                    "y": 56
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "node_red"
+            }, {
+                "data": {
+                    "id": "Aggregate",
+                    "parent": "RaspberryPi"
+                },
+                "position": {
+                    "x": 695,
+                    "y": 66
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "node_red"
+            }, {
+                "data": {
+                    "id": "CouchDB",
+                    "parent": "AWS_VM"
+                },
+                "position": {
+                    "x": 866,
+                    "y": 108
+                },
+                "group": "nodes",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }],
+            "edges": [{
+                "data": {
+                    "id": "to_couch",
+                    "source": "Aggregate",
+                    "target": "CouchDB"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "to_aggregate",
+                    "source": "DisplayControl",
+                    "target": "Aggregate"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "to_aggregate2",
+                    "source": "ControlTemp",
+                    "target": "Aggregate"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "to_temp",
+                    "source": "Aggregate",
+                    "target": "ControlTemp"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": ""
+            }, {
+                "data": {
+                    "id": "controldisplaymessage",
+                    "source": "DisplayControl",
+                    "target": "DisplayMessage"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "control"
+            }, {
+                "data": {
+                    "id": "controltempshutter",
+                    "source": "ControlTemp",
+                    "target": "rfxcom"
+                },
+                "position": {},
+                "group": "edges",
+                "removed": false,
+                "selected": false,
+                "selectable": true,
+                "locked": false,
+                "grabbable": true,
+                "classes": "control"
+            }]
+        },
+        "style": [{
+            "selector": "node",
+            "style": {
+                "label": "data(id)",
+                "background-fit": "contain",
+                "background-image-opacity": "0.3",
+                "text-valign": "center",
+                "text-halign": "center",
+                "font-size": "4px",
+                "font-weight": "bold"
+            }
+        }, {
+            "selector": "node.container",
+            "style": {
+                "padding": "10px",
+                "text-valign": "top",
+                "text-halign": "center",
+                "background-color": "#DDD",
+                "font-size": "8px",
+                "font-weight": "normal",
+                "shape": "rectangle",
+                "background-image": "./img/docker-official.svg"
+            }
+        }, {
+            "selector": "edge",
+            "style": {
+                "curve-style": "bezier",
+                "target-arrow-shape": "triangle"
+            }
+        }, {
+            "selector": "edge.control",
+            "style": {
+                "background-color": "#B47",
+                "curve-style": "bezier",
+                "target-arrow-shape": "circle"
+            }
+        }, {
+            "selector": ":selected",
+            "style": {
+                "background-color": "black",
+                "line-color": "black",
+                "target-arrow-color": "black",
+                "source-arrow-color": "black"
+            }
+        }, {
+            "selector": "node.questionable",
+            "style": {
+                "border-color": "#A33",
+                "background-color": "#B55",
+                "shape": "roundrectangle"
+            }
+        }, {
+            "selector": "node.node_red",
+            "style": {
+                "background-image": "./img/node-red-256.png"
+            }
+        }, {
+            "selector": "node.device",
+            "style": {
+                "padding": "10px",
+                "text-valign": "top",
+                "text-halign": "center",
+                "background-color": "#DDD",
+                "font-size": "8px",
+                "font-weight": "normal",
+                "shape": "rectangle",
+                "background-image": "./img/device.png"
+            }
+        }, {
+            "selector": "node.vm",
+            "style": {
+                "padding": "10px",
+                "text-valign": "top",
+                "text-halign": "center",
+                "background-color": "#DDD",
+                "font-size": "8px",
+                "font-weight": "normal",
+                "shape": "rectangle",
+                "background-image": "./img/server_cloud.png"
+            }
+        }],
+        "zoomingEnabled": true,
+        "userZoomingEnabled": true,
+        "zoom": 1.6443717232149333,
+        "minZoom": 1e-50,
+        "maxZoom": 1e+50,
+        "panningEnabled": true,
+        "userPanningEnabled": true,
+        "pan": {
+            "x": -475.16295442017133,
+            "y": 113.28390159806061
+        },
+        "boxSelectionEnabled": false,
+        "renderer": {
+            "name": "canvas"
+        }
+    }
+}
