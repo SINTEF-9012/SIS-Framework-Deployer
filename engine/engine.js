@@ -159,24 +159,27 @@ var engine = (function () {
             }
         });
 
-
         var flow = '[';
 
         //For each link starting from the component we add a websocket out component
         for (var j in src_tab) {
-            var tgt_component = dm.find_node_named(src_tab[j].target);
-            var source_component = dm.find_node_named(src_tab[j].src);
-            var tgt_host_id = tgt_component.id_host;
-            var tgt_host = dm.find_node_named(tgt_host_id);
-            var client = uuidv1();
-            flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+            if (!src_tab[j].isControl) {
+                var tgt_component = dm.find_node_named(src_tab[j].target);
+                var source_component = dm.find_node_named(src_tab[j].src);
+                var tgt_host_id = tgt_component.id_host;
+                var tgt_host = dm.find_node_named(tgt_host_id);
+                var client = uuidv1();
+                flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+            }
         }
 
         //For each link ending in the component we add a websocket in component
         for (var z in tgt_tab) {
-            var server = uuidv1();
-            var src_component = dm.find_node_named(tgt_tab[z].src);
-            flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
+            if (!tgt_tab[z].isControl) {
+                var server = uuidv1();
+                var src_component = dm.find_node_named(tgt_tab[z].src);
+                flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
+            }
         }
 
         //Remove the last ','
@@ -189,7 +192,7 @@ var engine = (function () {
         var result = filtered_old_components.concat(t)
 
 
-        setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab);
+        that.setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab);
     }
 
 

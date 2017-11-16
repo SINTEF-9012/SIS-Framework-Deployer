@@ -222,6 +222,7 @@ var software_node = function (spec) {
     that.docker_resource = spec.docker_resource || docker_resource({});
     that.ssh_resource = spec.ssh_resource || ssh_resource({});
     that._type = "software";
+    that.port = spec.port || '1880';
 
     return that;
 };
@@ -231,8 +232,18 @@ var software_node = function (spec) {
 /******************************/
 var node_red = function (spec) {
     var that = software_node(spec); //the inheritance
-    that.port = spec.port || '1880';
     that._type = "node_red";
+
+    return that;
+};
+
+
+/******************************/
+/* Specific ThingML component*/
+/******************************/
+var thingml = function (spec) {
+    var that = software_node(spec); //the inheritance
+    that._type = "thingml";
 
     return that;
 };
@@ -254,7 +265,7 @@ var link = function (spec) {
     var that = component(spec);
     that.src = spec.src || null;
     that.target = spec.target || null;
-    that.isControl = false;
+    that.isControl = spec.isControl || false;
 
     return that;
 }
@@ -331,6 +342,7 @@ module.exports = {
     link: link,
     external_node: external_node,
     node_red: node_red,
+    thingml: thingml,
     software_node: software_node,
     device: device,
     vm_host: vm_host,

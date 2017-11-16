@@ -265,7 +265,7 @@ $('#loadFile').on('click', function (evt) {
         var data = JSON.parse(fr.result);
         dm = deployment_model(data.dm);
         dm.revive_components(data.dm.components);
-        dm.revive_links(data.dm.links)
+        dm.revive_links(data.dm.links);
         cy.json(data.graph);
     }
 
