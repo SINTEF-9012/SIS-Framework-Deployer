@@ -77,7 +77,7 @@
                 "configureCommand": ""
             },
             "_type": "node_red",
-            "port": "1880"
+            "port": "1882"
         }, {
             "name": "DisplayMessage",
             "properties": [],
@@ -150,7 +150,7 @@
                 "configureCommand": ""
             },
             "_type": "node_red",
-            "port": "1880"
+            "port": "1881"
         }, {
             "name": "CouchDB",
             "properties": [],
