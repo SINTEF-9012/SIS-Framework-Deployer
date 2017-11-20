@@ -201,8 +201,8 @@ var engine = (function () {
     }
 
 
-    //TO be migrated in a node-red connector
-    that.installNodeType = function (tgt_host, tgt_port, data) {
+    //To be migrated in a node-red connector
+    that.installNodeType = function (tgt_host, tgt_port, data, callback) {
         var options = {
             host: tgt_host,
             path: '/nodes',
@@ -219,6 +219,7 @@ var engine = (function () {
             response.on('end', function () {
                 console.log("Request completed " + str);
                 bus.emit('node installed', str);
+                callback(str);
             });
 
         });

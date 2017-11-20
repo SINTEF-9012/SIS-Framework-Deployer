@@ -239,11 +239,60 @@ var node_red = function (spec) {
 
 
 /******************************/
-/* Specific ThingML component*/
+/* Specific ThingML component */
 /******************************/
 var thingml = function (spec) {
     var that = software_node(spec); //the inheritance
     that._type = "thingml";
+    that.nr_description = {
+        node: [{
+            "id": "db1675d5.7d759",
+            "type": "thingml",
+            "z": "36abed84.04bdb2",
+            "name": "",
+            "deviceId": "Thing",
+            "target": "nodejs",
+            "code": "",
+            "port": "",
+            "ardtype": "",
+            "source": "",
+            "cpu": "",
+            "x": 541.5,
+            "y": 411,
+            "wires": [[]]
+            }]
+    };
+
+    return that;
+};
+
+/******************************/
+/* Specific rfxcom component */
+/******************************/
+var rfxcom = function (spec) {
+    var that = software_node(spec); //the inheritance
+    that._type = "rfxcom";
+    that.nr_description = {
+        package: "node-red-contrib-rfxcom",
+        node: [{
+            "id": "20d1732e.942b84",
+            "type": "rfx-sensor",
+            "z": "36abed84.04bdb2",
+            "name": "",
+            "port": "b60198b5.e6fb28",
+            "topicSource": "all",
+            "topic": "",
+            "x": 282.5,
+            "y": 363,
+            "wires": [[]]
+        }, {
+            "id": "b60198b5.e6fb28",
+            "type": "rfxtrx-port",
+            "z": "",
+            "port": "/dev/ttyUSB0",
+            "rfyVenetianMode": "EU"
+        }]
+    };
 
     return that;
 };
@@ -343,6 +392,7 @@ module.exports = {
     external_node: external_node,
     node_red: node_red,
     thingml: thingml,
+    rxfcom: rfxcom,
     software_node: software_node,
     device: device,
     vm_host: vm_host,
