@@ -166,10 +166,12 @@ var engine = (function () {
             if (!src_tab[j].isControl) {
                 var tgt_component = dm.find_node_named(src_tab[j].target);
                 var source_component = dm.find_node_named(src_tab[j].src);
-                var tgt_host_id = tgt_component.id_host;
-                var tgt_host = dm.find_node_named(tgt_host_id);
-                var client = uuidv1();
-                flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+                if (tgt_component._type === 'node_red' && source_component._type === 'node_red') {
+                    var tgt_host_id = tgt_component.id_host;
+                    var tgt_host = dm.find_node_named(tgt_host_id);
+                    var client = uuidv1();
+                    flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+                }
             }
         }
 
@@ -177,8 +179,11 @@ var engine = (function () {
         for (var z in tgt_tab) {
             if (!tgt_tab[z].isControl) {
                 var server = uuidv1();
+                var target_component = dm.find_node_named(tgt_tab[z].target);
                 var src_component = dm.find_node_named(tgt_tab[z].src);
-                flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
+                if (src_component._type === 'node_red' && target_component === 'node_red') {
+                    flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
+                }
             }
         }
 
@@ -188,14 +193,46 @@ var engine = (function () {
         flow += ']';
 
         //We concat the old flow with the new one
-        var t = JSON.parse(flow);
-        var result = filtered_old_components.concat(t)
-
-
-        that.setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab);
+        if (flow.length > 2) { // not empty "[]"
+            var t = JSON.parse(flow);
+            var result = filtered_old_components.concat(t)
+            that.setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab);
+        }
     }
 
 
+    //TO be migrated in a node-red connector
+    that.installNodeType = function (tgt_host, tgt_port, data) {
+        var options = {
+            host: tgt_host,
+            path: '/nodes',
+            port: tgt_port,
+            method: 'POST',
+        };
+
+        var req = http.request(options, function (response) {
+            var str = ''
+            response.on('data', function (chunk) {
+                str += chunk;
+            });
+
+            response.on('end', function () {
+                console.log("Request completed " + str);
+                bus.emit('node installed', str);
+            });
+
+        });
+
+        req.on('error', function (err) {
+
+        });
+
+        req.write(data);
+        req.end();
+
+    };
+
+    //TO be migrated in a node-red connector
     that.getCurrentFlow = function (tgt_host, tgt_port, src_tab, tgt_tab, dm, callback) {
         var opt = {
             host: tgt_host,
@@ -212,9 +249,9 @@ var engine = (function () {
                 that.getCurrentFlow(tgt_host, tgt_port, src_tab, tgt_tab, dm, callback);
             }, 2000);
         });
-    }
+    };
 
-
+    //TO be migrated in a node-red connector
     that.setFlow = function (tgt_host, tgt_port, data, tgt_tab) {
         var options = {
             host: tgt_host,
@@ -251,7 +288,6 @@ var engine = (function () {
                 setFlow(tgt_host, tgt_port, data, tgt_tab); //we try to reconnect if the connection as failed
             }, 5000);
         });
-
 
 
         //This is the data we are posting, it needs to be a string or a buffer

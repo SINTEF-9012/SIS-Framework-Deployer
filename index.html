@@ -20,6 +20,19 @@
 
     <link href="css/style.css" rel="stylesheet">
 
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        .dropdown-submenu {
+            position: relative;
+        }
+        
+        .dropdown-submenu .dropdown-menu {
+            top: 0;
+            left: 100%;
+            margin-top: -1px;
+        }
+    </style>
+
 </head>
 
 <body>
@@ -52,8 +65,15 @@
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Add Component<span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li><a href="#" id="external_comp">External Component</a></li>
-                            <li><a href="#" id="software">Software Component</a></li>
-                            <li><a href="#" id="nr">Node-red</a></li>
+                            <li class="dropdown-submenu">
+                                <a class="test">Software Component<span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" id="software">Generic Software Component</a></li>
+                                    <li role="separator" class="divider"></li>
+                                    <li><a href="#" id="nr">Node-red</a></li>
+                                    <li><a href="#" id="thingml">ThingML</a></li>
+                                </ul>
+                            </li>
                         </ul>
                     </li>
                     <li class="dropdown">
@@ -322,6 +342,16 @@
     <script src="editor/graph.js"></script>
 
     <script src="editor/controller.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.dropdown-submenu a.test').on("click", function (e) {
+                $(this).next('ul').toggle();
+                e.stopPropagation();
+                e.preventDefault();
+            });
+        });
+    </script>
 
 </body>
 
