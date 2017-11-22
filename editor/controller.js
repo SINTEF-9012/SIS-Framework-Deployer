@@ -75,14 +75,24 @@ var context_menu = (function () {
 /*content                              */
 /***************************************/
 
-var create_modal = (function () {
+var create_modal = function (modules) {
     var f, elem, type;
 
-    var manage_modal = function (stype) {
+    var manage_modal = function (stype, isPlugin) {
         $('#create_form').html(''); //We clean before we load the content of the modal
-        f = node_factory(); // Just to generate the form ...
+        f = dm.node_factory(); // Just to generate the form ...
         type = stype;
-        elem = f.create_component(type, {});
+        if (!isPlugin) {
+            elem = f.create_component(type, {});
+        } else {
+            for (var j = 0; j < modules.length; j++) {
+                if (modules[j].id === stype) {
+                    var tmp = JSON.stringify(modules[j].module);
+                    elem = JSON.parse(tmp);
+                    break;
+                }
+            }
+        }
         build_form(elem, 'create_form');
 
         $("#modalDocker").modal();
@@ -90,41 +100,55 @@ var create_modal = (function () {
 
 
     $('#vm').on('click', function (e) { //ugly, needs to be exensible
-        manage_modal("vm_host");
+        manage_modal("vm_host", false);
     });
 
     $('#docker').on('click', function (e) { //ugly, needs to be exensible
-        manage_modal("docker_host");
-    });
-
-    $('#nr').on('click', function (e) {
-        manage_modal("node_red");
+        manage_modal("docker_host", false);
     });
 
     $('#external_comp').on('click', function (e) {
-        manage_modal("external_node");
+        manage_modal("external_node", false);
     });
 
     $('#device').on('click', function (e) {
-        manage_modal("device");
+        manage_modal("device", false);
+    });
+
+    $('#node_red').on('click', function (e) {
+        manage_modal("node_red", false);
     });
 
     $('#software').on('click', function (e) {
-        manage_modal("software");
+        manage_modal("software", false);
     });
 
-    $('#addHost').on('click', function (evt) {
+    $('.generated').on('click', function (e) {
+        manage_modal(event.target.id, true);
+    });
+
+    $('#addHost').on('click', function (evt) { //When you click on add in the modal
         var fac = graph_factory();
         var node = fac.create_node(type);
         cy.add(node);
         save_form(elem);
         dm.add_component(elem);
     });
-}());
+};
+
+function get_all_properties(elem) {
+    var props = [];
+    for (var prop in elem) {
+        if (typeof elem[prop] != 'function') {
+            props.push(prop);
+        }
+    }
+    return props;
+}
 
 
 function build_form(elem, container) {
-    var props = elem.get_all_properties();
+    var props = get_all_properties(elem);
 
     for (var p in props) { // We generate the form from the component's properties
         var item_value = props[p];
@@ -145,7 +169,7 @@ function build_form(elem, container) {
 }
 
 function save_form(elem) {
-    var props = elem.get_all_properties();
+    var props = get_all_properties(elem);
     for (var p in props) {
         var item_value = props[p];
 
@@ -171,7 +195,7 @@ $('#modalLink').on('show.bs.modal', function () {
     $('#selSrc').html(''); //we clean first
     $('#selTarget').html('');
     for (n in dm.components) {
-        if (dm.components[n].hasOwnProperty('id_host') || dm.components[n]._type === 'external_node') { //cannot be an host
+        if (!dm.components[n].hasOwnProperty('ip')) { //cannot be an host
             $('#selSrc').append('<option>' + dm.components[n].name + '</option>');
             $('#selTarget').append('<option>' + dm.components[n].name + '</option>');
         }
@@ -238,48 +262,6 @@ $('#addContainment').on('click', function (evt) {
     comp.id_host = selectedTarget;
 });
 
-/***************************************/
-/*Load and save                        */
-/***************************************/
-
-
-$('#loadFile').on('click', function (evt) {
-    var input, file, fr;
-    var input = $('#selectedFile').get(0);
-    if (!input) {
-        console.log("error", "Hum, couldn't find the selectedFile element.", 5000);
-    } else if (!input.files) {
-        console.log("error", "This browser doesn't seem to support the `files` property of file inputs", 5000);
-    } else if (!input.files[0]) {
-        console.log("error", "Please select a file before clicking 'Load'", 5000);
-    }
-    //its ok
-    else {
-        file = input.files[0];
-        fr = new FileReader();
-        fr.onload = receivedText;
-        fr.readAsText(file);
-    }
-
-    function receivedText() {
-        var data = JSON.parse(fr.result);
-        dm = deployment_model(data.dm);
-        dm.revive_components(data.dm.components);
-        dm.revive_links(data.dm.links);
-        cy.json(data.graph);
-    }
-
-});
-
-$('#save').on('click', function (evt) {
-    var all_in_one = {
-        dm: dm,
-        graph: cy.json()
-    };
-    window.open("data:application/octet-stream," + JSON.stringify(all_in_one));
-});
-
-
 
 /***************************************/
 /*Deploy                               */
@@ -304,6 +286,49 @@ $('#go').on('click', function () {
     console.log($('#url').val());
     client.connect($('#url').val());
 });
+
+
+/***************************************/
+/*Load and save                        */
+/***************************************/
+
+
+$('#loadFile').on('click', function (evt) {
+    var input, file, fr;
+    var input = $('#selectedFile').get(0);
+    if (!input) {
+        console.log("error", "Hum, couldn't find the selectedFile element.", 5000);
+    } else if (!input.files) {
+        console.log("error", "This browser doesn't seem to support the `files` property of file inputs", 5000);
+    } else if (!input.files[0]) {
+        console.log("error", "Please select a file before clicking 'Load'", 5000);
+    }
+    //its ok
+    else {
+        file = input.files[0];
+        fr = new FileReader();
+        fr.onload = receivedText;
+        fr.readAsText(file);
+    }
+
+    function receivedText() { //We ask the server because he is the one with all the plugins ...
+        var data = JSON.parse(fr.result);
+        dm = deployment_model(data.dm);
+        dm.components = data.dm.components;
+        dm.revive_links(data.dm.links);
+        cy.json(data.graph);
+    }
+
+});
+
+$('#save').on('click', function (evt) {
+    var all_in_one = {
+        dm: dm,
+        graph: cy.json()
+    };
+    window.open("data:application/octet-stream," + JSON.stringify(all_in_one));
+});
+
 
 /***************************************/
 /*Welcome                              */

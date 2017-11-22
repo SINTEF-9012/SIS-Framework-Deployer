@@ -79,10 +79,41 @@ var ws_client = function () {
                         });
                         break;
                     }
+                } else {
+                    var json_tmp = [];
+                    if (msg[0] === "@") { //This is an update on the types
+                        json_tmp = JSON.parse(msg.substr(1, msg.length));
+                        for (var j = 0; j < json_tmp.length; j++) {
+                            var name = json_tmp[j].id.replace('.js', '');
+                            $('#dynamic_menu').append('<li><a href="#" class="generated" id="' + name + '">' + name + '</a></li>');
+                        }
+                    }
+
+                    create_modal(json_tmp);
                 }
+
             }
         };
     };
+
+    /*that.createScriptTags = function (array) {
+        let tmp_array = array
+        let script = tmp_array.shift();
+        if (!script) {
+            console.log("All scripts are loaded");
+            return;
+        }
+        var name = script.id.replace('.js', '');
+        $('#dynamic_menu').append('<li><a href="#" id="' + name + '">' + name + '</a></li>')
+        var scr = document.createElement("script"); //Load the plugins
+        scr.type = 'text/javascript';
+        scr.onload = (event) => {
+            // loads the next script
+            that.createScriptTags(tmp_array);
+        };
+        scr.src = "repository/" + script.id;
+        document.body.appendChild(scr);
+    };*/
 
     that.send = function (text) {
         try {

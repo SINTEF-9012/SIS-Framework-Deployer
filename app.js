@@ -11,6 +11,7 @@ app.use("/editor", express.static(path.join(__dirname, 'editor')));
 app.use("/css", express.static(path.join(__dirname, 'css')));
 app.use("/fonts", express.static(path.join(__dirname, 'fonts')));
 app.use("/metamodel", express.static(path.join(__dirname, 'metamodel')));
+app.use("/repository", express.static(path.join(__dirname, 'repository')));
 app.use(express.static(path.join(__dirname, '')));
 
 //Start the engine

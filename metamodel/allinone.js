@@ -8,6 +8,37 @@ var deployment_model = function (spec) {
     that.name = spec.name || 'a name';
     that.components = [];
     that.links = [];
+    that.type_registry = [];
+
+    that.node_factory = function () {
+        var component;
+
+        this.create_component = function (type, spec) {
+            if (type === "device") {
+                component = device(spec);
+            } else if (type === "vm_host") {
+                component = vm_host(spec);
+            } else if (type === "docker_host") {
+                component = docker_host(spec);
+            } else if (type === "external_node") {
+                component = external_node(spec);
+            } else if (type === "node_red") {
+                component = node_red(spec);
+            } else if (type === "software") {
+                component = software_node(spec);
+            } else {
+                for (var i = 0; i < that.type_registry.length; i++) {
+                    if (that.type_registry[i].id.indexOf(type) >= 0) { //To be updated
+                        component = that.type_registry[i].module(spec);
+                        return component;
+                    }
+                }
+            }
+
+            return component;
+        }
+        return this;
+    };
 
     that.add_component = function (component) {
         that.components.push(component);
@@ -44,7 +75,7 @@ var deployment_model = function (spec) {
 
     that.revive_components = function (comps) {
         for (var i in comps) {
-            var f = node_factory();
+            var f = that.node_factory();
             var node = f.create_component(comps[i]._type, comps[i]);
             that.components.push(node);
         }
@@ -155,6 +186,7 @@ var component = function (spec) {
     return that;
 };
 
+
 /*****************************/
 /*Host                       */
 /*****************************/
@@ -238,65 +270,6 @@ var node_red = function (spec) {
 };
 
 
-/******************************/
-/* Specific ThingML component */
-/******************************/
-var thingml = function (spec) {
-    var that = software_node(spec); //the inheritance
-    that._type = "thingml";
-    that.nr_description = {
-        node: [{
-            "id": "db1675d5.7d759",
-            "type": "thingml",
-            "z": "36abed84.04bdb2",
-            "name": "",
-            "deviceId": "Thing",
-            "target": "nodejs",
-            "code": "",
-            "port": "",
-            "ardtype": "",
-            "source": "",
-            "cpu": "",
-            "x": 541.5,
-            "y": 411,
-            "wires": [[]]
-            }]
-    };
-
-    return that;
-};
-
-/******************************/
-/* Specific rfxcom component */
-/******************************/
-var rfxcom = function (spec) {
-    var that = software_node(spec); //the inheritance
-    that._type = "rfxcom";
-    that.nr_description = {
-        package: "node-red-contrib-rfxcom",
-        node: [{
-            "id": "20d1732e.942b84",
-            "type": "rfx-sensor",
-            "z": "36abed84.04bdb2",
-            "name": "",
-            "port": "b60198b5.e6fb28",
-            "topicSource": "all",
-            "topic": "",
-            "x": 282.5,
-            "y": 363,
-            "wires": [[]]
-        }, {
-            "id": "b60198b5.e6fb28",
-            "type": "rfxtrx-port",
-            "z": "",
-            "port": "/dev/ttyUSB0",
-            "rfyVenetianMode": "EU"
-        }]
-    };
-
-    return that;
-};
-
 /*****************************/
 /*External node              */
 /*****************************/
@@ -320,7 +293,7 @@ var link = function (spec) {
 }
 
 /*****************************/
-/*Docker resource             */
+/*Docker resource            */
 /*****************************/
 var docker_resource = function (spec) {
     var that = {};
@@ -354,45 +327,14 @@ var ssh_resource = function (spec) {
 }
 
 
-/***************************************/
-/*Factory to create component from type*/
-/***************************************/
-var node_factory = function () {
-    var component;
-
-    this.create_component = function (type, spec) {
-        if (type === "device") {
-            component = device(spec);
-        } else if (type === "vm_host") {
-            component = vm_host(spec);
-        } else if (type === "docker_host") {
-            component = docker_host(spec);
-        } else if (type === "external_node") {
-            component = external_node(spec);
-        } else if (type === "node_red") {
-            component = node_red(spec);
-        } else if (type === "software") {
-            component = software_node(spec);
-        }
-
-        return component;
-    }
-    return this;
-};
-
-
-
 ////////////////////////////////////////////////
 module.exports = {
     deployment_model: deployment_model,
-    node_factory: node_factory,
     ssh_resource: ssh_resource,
     docker_resource: docker_resource,
     link: link,
     external_node: external_node,
     node_red: node_red,
-    thingml: thingml,
-    rxfcom: rfxcom,
     software_node: software_node,
     device: device,
     vm_host: vm_host,

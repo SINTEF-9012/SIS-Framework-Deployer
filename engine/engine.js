@@ -6,7 +6,7 @@ var dc = require('./docker-connector.js');
 var bus = require('./event-bus.js');
 var uuidv1 = require('uuid/v1');
 var comp = require('./model-comparison.js');
-
+var class_loader = require('./class-loader.js');
 
 var engine = (function () {
     var that = {};
@@ -94,15 +94,17 @@ var engine = (function () {
         for (var i in comp) {
             var host_id = comp[i].id_host;
             var host = dm.find_node_named(host_id);
-            var connector = dc();
-            if (host._type === "docker_host") {
-                nb++;
-                if (comp[i]._type === "node_red") {
-                    //then we deploy node red
-                    //TODO: what if port_bindings is empty?
-                    connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework", comp[i].docker_resource.mounts, comp[i].name); //
-                } else {
-                    connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image, comp[i].docker_resource.mounts, comp[i].name);
+            if (host !== undefined) {
+                var connector = dc();
+                if (host._type === "docker_host") {
+                    nb++;
+                    if (comp[i]._type === "node_red") {
+                        //then we deploy node red
+                        //TODO: what if port_bindings is empty?
+                        connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework:latest", comp[i].docker_resource.mounts, comp[i].name); //
+                    } else {
+                        connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image, comp[i].docker_resource.mounts, comp[i].name);
+                    }
                 }
             }
         }
@@ -160,30 +162,38 @@ var engine = (function () {
         });
 
         var flow = '[';
+        var dependencies = "";
 
         //For each link starting from the component we add a websocket out component
         for (var j in src_tab) {
-            if (!src_tab[j].isControl) {
-                var tgt_component = dm.find_node_named(src_tab[j].target);
-                var source_component = dm.find_node_named(src_tab[j].src);
-                if (tgt_component._type === 'node_red' && source_component._type === 'node_red') {
-                    var tgt_host_id = tgt_component.id_host;
-                    var tgt_host = dm.find_node_named(tgt_host_id);
-                    var client = uuidv1();
-                    flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+            var tgt_component = dm.find_node_named(src_tab[j].target);
+            var source_component = dm.find_node_named(src_tab[j].src);
+            if (tgt_component._type === 'node_red' && source_component._type === 'node_red') {
+                var tgt_host_id = tgt_component.id_host;
+                var tgt_host = dm.find_node_named(tgt_host_id);
+                var client = uuidv1();
+                flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+            } else {
+                if (source_component._type === 'node_red') { //Check if we have a plugin for this type of component
+                    if (tgt_component.nr_description !== undefined && tgt_component.nr_description !== "") {
+                        for (w in tgt_component.nr_description.node) {
+                            flow += JSON.stringify(tgt_component.nr_description.node[w]) + ','; //how could we configure this?
+                        }
+                        if (tgt_component.nr_description.package !== undefined) {
+                            dependencies = '{"module": "' + tgt_component.nr_description.package + '"}'; //What if several?
+                        }
+                    }
                 }
             }
         }
 
         //For each link ending in the component we add a websocket in component
         for (var z in tgt_tab) {
-            if (!tgt_tab[z].isControl) {
-                var server = uuidv1();
-                var target_component = dm.find_node_named(tgt_tab[z].target);
-                var src_component = dm.find_node_named(tgt_tab[z].src);
-                if (src_component._type === 'node_red' && target_component === 'node_red') {
-                    flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
-                }
+            var server = uuidv1();
+            var target_component = dm.find_node_named(tgt_tab[z].target);
+            var src_component = dm.find_node_named(tgt_tab[z].src);
+            if (src_component._type === 'node_red' && target_component._type === 'node_red') {
+                flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
             }
         }
 
@@ -196,18 +206,29 @@ var engine = (function () {
         if (flow.length > 2) { // not empty "[]"
             var t = JSON.parse(flow);
             var result = filtered_old_components.concat(t)
-            that.setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab);
+            if (dependencies !== "") {
+                that.installNodeType(ip_host, tgt_port, dependencies, function (str) {
+                    that.setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab, src_tab, dm);
+                });
+            } else {
+                that.setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab, src_tab, dm);
+            }
+
         }
     }
 
 
     //To be migrated in a node-red connector
     that.installNodeType = function (tgt_host, tgt_port, data, callback) {
+        console.log("===>" + data);
         var options = {
             host: tgt_host,
             path: '/nodes',
             port: tgt_port,
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         };
 
         var req = http.request(options, function (response) {
@@ -217,7 +238,7 @@ var engine = (function () {
             });
 
             response.on('end', function () {
-                console.log("Request completed " + str);
+                console.log("Install Request completed " + str);
                 bus.emit('node installed', str);
                 callback(str);
             });
@@ -253,7 +274,7 @@ var engine = (function () {
     };
 
     //TO be migrated in a node-red connector
-    that.setFlow = function (tgt_host, tgt_port, data, tgt_tab) {
+    that.setFlow = function (tgt_host, tgt_port, data, tgt_tab, src_tab, dm) {
         var options = {
             host: tgt_host,
             path: '/flows', //The Flows API of nodered, which set the active flow configuration
@@ -275,6 +296,11 @@ var engine = (function () {
                 console.log("Request completed " + str);
                 for (var w in tgt_tab) { //if success, send feedback
                     bus.emit('link-ok', tgt_tab[w].name);
+                }
+                for (var p in src_tab) { //if success, send feedback
+                    if (dm.find_node_named(src_tab[p].target).nr_description !== undefined) {
+                        bus.emit('link-ok', src_tab[p].name);
+                    }
                 }
             });
 
@@ -299,37 +325,59 @@ var engine = (function () {
     that.start = function () {
         that.webSocketServerObject.on('connection', function (socketObject) {
             that.socketObject = socketObject;
+            //Load component types from the repository
+            var cl = class_loader();
+            cl.findModules({
+                folder: './repository'
+            }, function (modules) {
+                //Create a deployment model
+                var dm = mm.deployment_model({});
+                //Add types to the registry before we create the instances
+                dm.type_registry = modules; //can be used as follows modules[i].module({})
 
-            socketObject.on('message', function (message) {
-
-                //Load the model
-                var data = JSON.parse(message);
-                var dm = mm.deployment_model(data);
-                dm.revive_components(data.components);
-                dm.revive_links(data.links);
-
-
-                if (that.dep_model === 'undefined') {
-                    that.dep_model = dm;
-                    //Deploy: keep it because I know it works :p
-                    //TODO: remove this
-                    that.run(that.dep_model);
-                } else {
-                    //Compare model
-                    var comparator = comp(that.dep_model);
-                    that.diff = comparator.compare(dm);
-                    that.dep_model = dm; //target model becomes current
-
-                    //First do all the removal stuff
-                    console.log("Stopping removed containers");
-                    that.remove_containers(that.diff, that.dep_model);
-
-                    //Deploy only the added stuff
-                    console.log("Starting new containers");
-                    deploy(that.diff, that.dep_model);
-
+                var tab = [];
+                var mmodel = "";
+                for (var j = 0; j < modules.length; j++) {
+                    var tmp = {};
+                    tmp.id = modules[j].id.replace('.js', '');
+                    tmp.module = modules[j].module({});
+                    tab.push(tmp);
                 }
+                that.socketObject.send("@" + JSON.stringify(tab));
 
+
+                //Wait for a model from the editor
+                socketObject.on('message', function (message) {
+
+                    //Load the model
+                    var data = JSON.parse(message);
+
+                    dm.revive_components(data.components);
+                    dm.revive_links(data.links);
+
+                    console.log(JSON.stringify(dm.components));
+
+                    if (that.dep_model === 'undefined') {
+                        that.dep_model = dm;
+                        //Deploy: keep it because I know it works :p
+                        //TODO: remove this
+                        that.run(that.dep_model);
+                    } else {
+                        //Compare model
+                        var comparator = comp(that.dep_model);
+                        that.diff = comparator.compare(dm);
+                        that.dep_model = dm; //target model becomes current
+
+                        //First do all the removal stuff
+                        console.log("Stopping removed containers");
+                        that.remove_containers(that.diff, that.dep_model);
+
+                        //Deploy only the added stuff
+                        console.log("Starting new containers");
+                        deploy(that.diff, that.dep_model);
+
+                    }
+                });
             });
 
             socketObject.on('close', function (c, d) {
