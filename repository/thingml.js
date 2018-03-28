@@ -1,4 +1,5 @@
 var mm = require('../metamodel/allinone.js');
+var uuidv1 = require('uuid/v1');
 
 /******************************/
 /* Specific ThingML component */
@@ -9,7 +10,7 @@ var thingml = function (spec) {
     that.nr_description = {
         node: [{
             "id": "2b256dc3.f77caa",
-            "type": "thingml",
+            "type": uuidv1(),
             "z": "8e558623.7d71",
             "name": "MainCfg",
             "deviceId": "Thing",
