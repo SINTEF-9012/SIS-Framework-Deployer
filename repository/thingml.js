@@ -9,9 +9,9 @@ var thingml = function (spec) {
     that._type = "thingml";
     that.nr_description = {
         node: [{
-            "id": "2b256dc3.f77caa",
-            "type": uuidv1(),
-            "z": "8e558623.7d71",
+            "id": uuidv1(),
+            "type": "thingml",
+            "z": "dac41de7.a03038",
             "name": "MainCfg",
             "deviceId": "Thing",
             "target": "arduino",

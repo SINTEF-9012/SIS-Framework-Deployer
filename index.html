@@ -64,7 +64,13 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Add Component<span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li><a href="#" id="external_comp">External Component</a></li>
+                            <li class="dropdown-submenu">
+                                <a class="test">External Component<span class="caret"></span></a>
+                                <ul class="dropdown-menu" id="dynamic_menu_ext">
+                                    <li><a href="#" id="external_comp">Generic External Component</a></li>
+                                    <li role="separator" class="divider"></li>
+                                </ul>
+                            </li>
                             <li class="dropdown-submenu">
                                 <a class="test">Software Component<span class="caret"></span></a>
                                 <ul class="dropdown-menu" id="dynamic_menu">

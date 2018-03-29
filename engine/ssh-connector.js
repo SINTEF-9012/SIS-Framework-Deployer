@@ -8,7 +8,6 @@ var ssh_connector = function () {
 
 
     that.initialize = function (ip, port, key) {
-        console.log("plpo");
         fs.readFile(key, 'utf8', function (err, data) {
             if (err) {
                 return console.log("::" + err);

@@ -3,8 +3,9 @@ var http = require('http');
 var fs = require('fs');
 var mm = require('../metamodel/allinone.js');
 var dc = require('./docker-connector.js');
+var sshc = require('./ssh-connector.js');
 var bus = require('./event-bus.js');
-var uuidv1 = require('uuid/v1');
+var uuidv4 = require('uuid/v4');
 var comp = require('./model-comparison.js');
 var class_loader = require('./class-loader.js');
 
@@ -101,7 +102,7 @@ var engine = (function () {
                     if (comp[i]._type === "node_red") {
                         //then we deploy node red
                         //TODO: what if port_bindings is empty?
-                        connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/enact-framework:latest", comp[i].docker_resource.mounts, comp[i].name); //
+                        connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, "", "nicolasferry/sis-framework-arm:latest", comp[i].docker_resource.mounts, comp[i].name); //
                     } else {
                         connector.buildAndDeploy(host.ip, host.port, comp[i].docker_resource.port_bindings, comp[i].docker_resource.devices, comp[i].docker_resource.command, comp[i].docker_resource.image, comp[i].docker_resource.mounts, comp[i].name);
                     }
@@ -161,8 +162,9 @@ var engine = (function () {
             }
         });
 
-        var flow = '[';
+        var flow = '[{"id":"dac41de7.a03038","type":"tab","label":"Flow 1"},';
         var dependencies = "";
+        var tab=uuidv4();
 
         //For each link starting from the component we add a websocket out component
         for (var j in src_tab) {
@@ -171,13 +173,14 @@ var engine = (function () {
             if (tgt_component._type === 'node_red' && source_component._type === 'node_red') {
                 var tgt_host_id = tgt_component.id_host;
                 var tgt_host = dm.find_node_named(tgt_host_id);
-                var client = uuidv1();
-                flow += '{"id":"' + uuidv1() + '","type":"websocket out","z":"a880eeca.44e59","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","z":"","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
+                var client = uuidv4();
+                flow += '{"id":"' + uuidv4() + '","type":"websocket out","z": "dac41de7.a03038","name":"to_' + tgt_component.name + '","server":"","client":"' + client + '","x":331.5,"y":237,"wires":[]},{"id":"' + client + '","type":"websocket-client","path":"ws://' + tgt_host.ip + ':' + tgt_component.port + '/ws/' + source_component.name + '","wholemsg":"false"},';
             } else {
                 if (source_component._type === 'node_red') { //Check if we have a plugin for this type of component
                     if (tgt_component.nr_description !== undefined && tgt_component.nr_description !== "") {
                         for (w in tgt_component.nr_description.node) {
-                            flow += JSON.stringify(tgt_component.nr_description.node[w]) + ','; //how could we configure this?
+                            var _tmp=tgt_component.nr_description.node[w];
+                            flow += JSON.stringify(_tmp) + ','; //how could we configure this?
                         }
                         if (tgt_component.nr_description.package !== undefined) {
                             dependencies = '{"module": "' + tgt_component.nr_description.package + '"}'; //What if several?
@@ -189,11 +192,11 @@ var engine = (function () {
 
         //For each link ending in the component we add a websocket in component
         for (var z in tgt_tab) {
-            var server = uuidv1();
+            var server = uuidv4();
             var target_component = dm.find_node_named(tgt_tab[z].target);
             var src_component = dm.find_node_named(tgt_tab[z].src);
             if (src_component._type === 'node_red' && target_component._type === 'node_red') {
-                flow += '{"id":"' + uuidv1() + '","type":"websocket in","z":"75e4ddec.107b74","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","z":"","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
+                flow += '{"id":"' + uuidv4() + '","type":"websocket in","z": "dac41de7.a03038","name":"from_' + src_component.name + '","server":"' + server + '","client":"","x":143.5,"y":99,"wires":[]},{"id":"' + server + '","type":"websocket-listener","path":"/ws/' + src_component.name + '","wholemsg":"false"},';
             }
         }
 
@@ -206,6 +209,7 @@ var engine = (function () {
         if (flow.length > 2) { // not empty "[]"
             var t = JSON.parse(flow);
             var result = filtered_old_components.concat(t)
+            console.log(JSON.stringify(result));
             if (dependencies !== "") {
                 that.installNodeType(ip_host, tgt_port, dependencies, function (str) {
                     that.setFlow(ip_host, tgt_port, JSON.stringify(result), tgt_tab, src_tab, dm);
@@ -323,6 +327,15 @@ var engine = (function () {
     }
 
     that.start = function () {
+
+        //Lets do some stupid tests
+        /*var ssh_conn = sshc();
+        ssh_conn.initialize("192.168.43.1", "8022", "/Users/ferrynico/Documents/Code/id_rsa");
+        ssh_conn.on('initialized', function () {
+            ssh_conn.executeCommand('node-red');
+        });*/
+
+
         that.webSocketServerObject.on('connection', function (socketObject) {
             that.socketObject = socketObject;
             //Load component types from the repository
@@ -340,7 +353,9 @@ var engine = (function () {
                 for (var j = 0; j < modules.length; j++) {
                     var tmp = {};
                     tmp.id = modules[j].id.replace('.js', '');
-                    tmp.module = modules[j].module({});
+                    var comp = modules[j].module({});
+                    (comp.id_host === undefined) ? tmp.isExternal = true: tmp.isExternal = false;
+                    tmp.module = comp;
                     tab.push(tmp);
                 }
                 that.socketObject.send("@" + JSON.stringify(tab));

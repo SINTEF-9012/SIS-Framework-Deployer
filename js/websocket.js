@@ -85,7 +85,11 @@ var ws_client = function () {
                         json_tmp = JSON.parse(msg.substr(1, msg.length));
                         for (var j = 0; j < json_tmp.length; j++) {
                             var name = json_tmp[j].id.replace('.js', '');
-                            $('#dynamic_menu').append('<li><a href="#" class="generated" id="' + name + '">' + name + '</a></li>');
+                            if (json_tmp[j].isExternal) {
+                                $('#dynamic_menu_ext').append('<li><a href="#" class="generated" id="' + name + '">' + name + '</a></li>'); //software components
+                            } else {
+                                $('#dynamic_menu').append('<li><a href="#" class="generated" id="' + name + '">' + name + '</a></li>'); //software components   
+                            }
                         }
                     }
 
